@@ -11,9 +11,6 @@ import {
   PiggyBank,
   Search,
   Settings,
-  Shield,
-  ShieldCheck,
-  SlidersHorizontal,
   Sun,
   Target,
   TrendingDown,
@@ -22,8 +19,9 @@ import {
   Wallet
 } from 'lucide-react'
 import { Link, Navigate, NavLink, useNavigate } from 'react-router-dom'
-import { AUTH_ACCOUNT_KEY, AUTH_STORAGE_KEY, hashPassword, initials, money, navItems } from './app-data.js'
-import { useAppData, useNotifications, useTheme } from './contexts.js'
+import { AUTH_STORAGE_KEY, initials, money, navItems, settingSections } from './app-data.js'
+import { useAppData, useNotifications, usePreferences, useTheme } from './contexts.js'
+import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
 
 export function DataModal({ title, form, setForm, fields, onClose, onSave, submitLabel = 'Save' }) {
   const changeField = (event) => {
@@ -169,7 +167,7 @@ export function NotificationList({ items, onRead }) {
 
 export function DashboardHeader() {
   const navigate = useNavigate()
-  const { data } = useAppData()
+  const { data, setSessionToken } = useAppData()
   const { notifications, markRead, markAllRead } = useNotifications()
   const { theme, setTheme } = useTheme()
   const [openMenu, setOpenMenu] = useState(null)
@@ -207,7 +205,9 @@ export function DashboardHeader() {
   }, [])
 
   const logout = () => {
+    clearApiToken()
     localStorage.removeItem(AUTH_STORAGE_KEY)
+    setSessionToken(null)
     navigate('/login')
   }
 
@@ -316,6 +316,8 @@ export function DashboardHeader() {
 
 export function AppLayout({ children }) {
   const navigate = useNavigate()
+  const { error, setSessionToken } = useAppData()
+  const { error: preferencesError } = usePreferences()
   const location = window.location.pathname
 
   return (
@@ -342,7 +344,7 @@ export function AppLayout({ children }) {
           ))}
         </nav>
 
-        <button type="button" className="logout-nav" onClick={() => { localStorage.removeItem(AUTH_STORAGE_KEY); navigate('/login') }}>
+        <button type="button" className="logout-nav" onClick={() => { clearApiToken(); localStorage.removeItem(AUTH_STORAGE_KEY); setSessionToken(null); navigate('/login') }}>
           <LogOut size={14} />
           Logout
         </button>
@@ -350,6 +352,7 @@ export function AppLayout({ children }) {
 
       <div className="content-panel">
         <DashboardHeader />
+        {(error || preferencesError) && <div className="api-error-banner" role="alert">{error || preferencesError}</div>}
         {children}
       </div>
     </div>
@@ -357,7 +360,7 @@ export function AppLayout({ children }) {
 }
 
 export function ProtectedRoute({ children }) {
-  const isLoggedIn = Boolean(localStorage.getItem(AUTH_STORAGE_KEY))
+  const isLoggedIn = Boolean(localStorage.getItem(AUTH_STORAGE_KEY)) && Boolean(getApiToken())
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />
@@ -394,6 +397,7 @@ export function ToggleSetting({ title, description, checked, onChange }) {
 }
 
 export function PasswordChangeForm() {
+  const { setApiError } = useAppData()
   const [passwordForm, setPasswordForm] = useState({ current: '', next: '', confirm: '' })
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordError, setPasswordError] = useState('')
@@ -411,21 +415,15 @@ export function PasswordChangeForm() {
       return
     }
     try {
-      const storedAccount = localStorage.getItem(AUTH_ACCOUNT_KEY)
-      if (!storedAccount) {
-        setPasswordError('Password changes require a locally registered account.')
-        return
-      }
-      const account = JSON.parse(storedAccount)
-      if (account.passwordHash !== await hashPassword(passwordForm.current)) {
-        setPasswordError('Current password is incorrect.')
-        return
-      }
-      localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify({ ...account, passwordHash: await hashPassword(passwordForm.next) }))
+      await apiRequest('/auth/password', {
+        method: 'PATCH',
+        body: { currentPassword: passwordForm.current, newPassword: passwordForm.next },
+      })
       setPasswordForm({ current: '', next: '', confirm: '' })
       setPasswordMessage('Password updated.')
-    } catch {
-      setPasswordError('Unable to update your password. Please try again.')
+    } catch (requestError) {
+      setPasswordError(requestError.message)
+      setApiError(requestError.message)
     }
   }
 

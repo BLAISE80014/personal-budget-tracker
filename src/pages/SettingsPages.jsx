@@ -13,14 +13,15 @@ import {
   UserRound
 } from 'lucide-react'
 import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
-import { AUTH_ACCOUNT_KEY, initials, settingSections } from '../app-data.js'
+import { initials, settingSections } from '../app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from '../contexts.js'
 import { AppLayout, DataModal, NotificationList, PasswordChangeForm, ToggleSetting } from '../components.jsx'
+import { apiRequest } from '../api/client.js'
 
 export function SettingsPage() {
   const { section = 'profile' } = useParams()
   const navigate = useNavigate()
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const { theme, setTheme } = useTheme()
   const { preferences, setPreferences } = usePreferences()
   const validSection = settingSections.some((item) => item.id === section)
@@ -29,16 +30,18 @@ export function SettingsPage() {
 
   if (!validSection) return <Navigate to="/settings/profile" replace />
 
-  const saveProfile = (event) => {
+  const saveProfile = async (event) => {
     event.preventDefault()
-    const updated = { ...data.user, ...profileForm, email: profileForm.email.trim().toLowerCase() }
-    setData((current) => ({ ...current, user: updated }))
-    const savedAccount = localStorage.getItem(AUTH_ACCOUNT_KEY)
-    if (savedAccount) {
-      const account = JSON.parse(savedAccount)
-      localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify({ ...account, email: updated.email }))
+    try {
+      const { user } = await apiRequest('/auth/profile', {
+        method: 'PATCH',
+        body: { ...profileForm, email: profileForm.email.trim().toLowerCase() },
+      })
+      setData((current) => ({ ...current, user }))
+      setEditing(false)
+    } catch (requestError) {
+      setApiError(requestError.message)
     }
-    setEditing(false)
   }
 
   const updateNotificationPreference = (key, value) => setPreferences((current) => ({
@@ -51,7 +54,7 @@ export function SettingsPage() {
     account: ['Account', 'Review your account details and sign-in status.'],
     notifications: ['Notifications', 'Choose which activity updates you receive.'],
     appearance: ['Appearance', 'Personalize how the tracker looks.'],
-    security: ['Security', 'Keep your local demo account secure.'],
+    security: ['Security', 'Manage your account password securely.'],
     preferences: ['Preferences', 'Set your preferred language, currency, and date format.'],
   }
   const [title, description] = sectionTitles[section]
@@ -91,8 +94,8 @@ export function SettingsPage() {
               <div className="settings-card">
                 <div className="account-detail-row"><span><UserRound size={17} /> Account name</span><strong>{data.user.fullName}</strong></div>
                 <div className="account-detail-row"><span><Mail size={17} /> Email address</span><strong>{data.user.email}</strong></div>
-                <div className="account-detail-row"><span><ShieldCheck size={17} /> Account type</span><strong>Local demo account</strong></div>
-                <div className="settings-notice">Your information and sign-in are stored in this browser. No remote account service is connected.</div>
+                <div className="account-detail-row"><span><ShieldCheck size={17} /> Account type</span><strong>Personal account</strong></div>
+                <div className="settings-notice">Your account and tracker records are securely stored by the Personal Budget Tracker service.</div>
                 <button type="button" className="outline-button" onClick={() => navigate('/profile')}>Open full profile</button>
               </div>
             )}
@@ -129,7 +132,7 @@ export function SettingsPage() {
 
             {section === 'security' && (
               <div className="settings-card security-settings">
-                <div className="settings-notice">This demo stores a password hash locally in your browser. It is not a substitute for server-side authentication.</div>
+                <div className="settings-notice">Your password is protected with bcrypt and never returned by the API.</div>
                 <PasswordChangeForm />
               </div>
             )}
@@ -191,21 +194,23 @@ export function NotificationsPage() {
 }
 
 export function ProfilePage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const user = data.user
   const [editing, setEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({ fullName: user.fullName, email: user.email, phone: user.phone })
 
-  const saveProfile = (event) => {
+  const saveProfile = async (event) => {
     event.preventDefault()
-    const updated = { ...user, ...profileForm, email: profileForm.email.trim().toLowerCase() }
-    setData((current) => ({ ...current, user: updated }))
-    const savedAccount = localStorage.getItem(AUTH_ACCOUNT_KEY)
-    if (savedAccount) {
-      const account = JSON.parse(savedAccount)
-      localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify({ ...account, email: updated.email }))
+    try {
+      const { user: updated } = await apiRequest('/auth/profile', {
+        method: 'PATCH',
+        body: { ...profileForm, email: profileForm.email.trim().toLowerCase() },
+      })
+      setData((current) => ({ ...current, user: updated }))
+      setEditing(false)
+    } catch (requestError) {
+      setApiError(requestError.message)
     }
-    setEditing(false)
   }
 
   return (

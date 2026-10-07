@@ -20,6 +20,7 @@ export const defaultPreferences = {
   currency: 'USD',
   language: 'English',
   dateFormat: 'MMM d, yyyy',
+  theme: 'light',
 }
 
 export const initialNotifications = [

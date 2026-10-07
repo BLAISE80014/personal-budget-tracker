@@ -10,14 +10,14 @@ import {
   Trash2
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AUTH_ACCOUNT_KEY, AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, defaultUser, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, hashPassword, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
+import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
 import { useAppData, useNotifications } from '../contexts.js'
 import { AppLayout, DataModal, PublicHeader, SummaryCard } from '../components.jsx'
+import { apiRequest, setApiToken } from '../api/client.js'
 
 export function AuthPage({ mode }) {
   const navigate = useNavigate()
-  const { setData } = useAppData()
-  const { addNotification } = useNotifications()
+  const { setData, setSessionToken } = useAppData()
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
@@ -33,7 +33,7 @@ export function AuthPage({ mode }) {
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     setError('')
     const email = form.email.trim().toLowerCase()
@@ -51,48 +51,28 @@ export function AuthPage({ mode }) {
     }
 
     setSubmitting(true)
-    Promise.resolve().then(async () => {
-      const passwordHash = await hashPassword(form.password)
-      if (isRegister) {
-        if (!form.fullName.trim()) {
-          setError('Enter your full name.')
-          return
-        }
-        const currentAccount = localStorage.getItem(AUTH_ACCOUNT_KEY)
-        if (currentAccount) {
-          const account = JSON.parse(currentAccount)
-          if (account.email === email) {
-            setError('An account with this email already exists. Please log in.')
-            return
-          }
-        }
-        localStorage.setItem(AUTH_ACCOUNT_KEY, JSON.stringify({ email, passwordHash }))
-        const user = {
-          ...defaultUser,
-          fullName: form.fullName.trim(),
-          email,
-          memberSince: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        }
-        setData((current) => ({ ...current, user }))
-        addNotification('account', 'Your account is ready', 'Welcome to your personal budget tracker.')
-      } else {
-        const storedAccount = localStorage.getItem(AUTH_ACCOUNT_KEY)
-        if (!storedAccount) {
-          setError('No local account exists yet. Register to create one.')
-          return
-        }
-        const account = JSON.parse(storedAccount)
-        if (account.email !== email || account.passwordHash !== passwordHash) {
-          setError('Email or password is incorrect.')
-          return
-        }
-        addNotification('account', 'Welcome back', 'You have successfully signed in.')
+    try {
+      if (isRegister && !form.fullName.trim()) {
+        setError('Enter your full name.')
+        return
       }
-      localStorage.setItem(AUTH_STORAGE_KEY, email)
+      const result = await apiRequest(isRegister ? '/auth/register' : '/auth/login', {
+        method: 'POST',
+        authenticated: false,
+        body: isRegister
+          ? { fullName: form.fullName.trim(), email, password: form.password }
+          : { email, password: form.password },
+      })
+      setApiToken(result.token)
+      localStorage.setItem(AUTH_STORAGE_KEY, result.user.email)
+      setSessionToken(result.token)
+      setData((current) => ({ ...current, user: result.user }))
       navigate('/dashboard')
-    }).catch(() => {
-      setError('Unable to complete sign in. Please try again.')
-    }).finally(() => setSubmitting(false))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const isRegister = mode === 'register'
@@ -299,7 +279,7 @@ export function DashboardPage() {
 }
 
 export function IncomePage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -313,22 +293,39 @@ export function IncomePage() {
     setOpen(true)
   }
 
-  const saveIncome = (event) => {
+  const saveIncome = async (event) => {
     event.preventDefault()
     const record = { ...form, amount: Number(form.amount) }
-    setData((current) => ({
-      ...current,
-      income: editing
-        ? current.income.map((entry) => entry.id === editing.id ? { ...record, id: editing.id } : entry)
-        : [{ id: Date.now(), ...record }, ...current.income],
-    }))
+    try {
+      const { item } = await apiRequest(`/income${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
+        method: editing ? 'PATCH' : 'POST',
+        body: editing ? { ...record, id: editing.id } : record,
+      })
+      setData((current) => ({
+        ...current,
+        income: editing
+          ? current.income.map((entry) => entry.id === editing.id ? item : entry)
+          : [item, ...current.income],
+      }))
+      setApiError('')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     addNotification('income', editing ? 'Income updated' : 'Income added', `${record.source} income of ${money(record.amount)} was ${editing ? 'updated' : 'added'}.`)
     setOpen(false)
     setEditing(null)
   }
 
-  const removeIncome = (id) => {
+  const removeIncome = async (id) => {
+    try {
+      await apiRequest(`/income/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({ ...current, income: current.income.filter((entry) => entry.id !== id) }))
+    setApiError('')
     const entry = data.income.find((item) => item.id === id)
     if (entry) addNotification('income', 'Income removed', `${entry.source} income of ${money(entry.amount)} was removed.`)
   }
@@ -399,7 +396,7 @@ export function IncomePage() {
 }
 
 export function ExpensesPage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -413,17 +410,29 @@ export function ExpensesPage() {
     setOpen(true)
   }
 
-  const saveExpense = (event) => {
+  const saveExpense = async (event) => {
     event.preventDefault()
     const record = { ...form, amount: Number(form.amount) }
+    let saved
+    try {
+      const { item } = await apiRequest(`/expenses${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
+        method: editing ? 'PATCH' : 'POST',
+        body: editing ? { ...record, id: editing.id } : record,
+      })
+      saved = item
+      setApiError('')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     const updatedExpenses = editing
-      ? data.expenses.map((item) => item.id === editing.id ? { ...record, id: editing.id } : item)
-      : [{ id: Date.now(), ...record }, ...data.expenses]
+      ? data.expenses.map((item) => item.id === editing.id ? saved : item)
+      : [saved, ...data.expenses]
     setData((current) => ({
       ...current,
       expenses: editing
-        ? current.expenses.map((item) => item.id === editing.id ? { ...record, id: editing.id } : item)
-        : [{ id: Date.now(), ...record }, ...current.expenses],
+        ? current.expenses.map((item) => item.id === editing.id ? saved : item)
+        : [saved, ...current.expenses],
     }))
     addNotification('expense', editing ? 'Expense updated' : 'Expense added', `${record.description} expense of ${money(record.amount)} was ${editing ? 'updated' : 'added'}.`)
     data.budgets
@@ -440,8 +449,15 @@ export function ExpensesPage() {
     setEditing(null)
   }
 
-  const removeExpense = (id) => {
+  const removeExpense = async (id) => {
+    try {
+      await apiRequest(`/expenses/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({ ...current, expenses: current.expenses.filter((item) => item.id !== id) }))
+    setApiError('')
     const item = data.expenses.find((expense) => expense.id === id)
     if (item) addNotification('expense', 'Expense removed', `${item.description} expense of ${money(item.amount)} was removed.`)
   }
@@ -512,18 +528,30 @@ export function ExpensesPage() {
 }
 
 export function CategoriesPage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', icon: 'food' })
 
-  const addCategory = (event) => {
+  const addCategory = async (event) => {
     event.preventDefault()
-    const category = { id: editing?.id ?? Date.now(), name: form.name.trim(), icon: form.icon, count: 0 }
+    const record = { name: form.name.trim(), icon: form.icon, count: editing?.count ?? 0 }
+    let category
+    try {
+      const { item } = await apiRequest(`/categories${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
+        method: editing ? 'PATCH' : 'POST',
+        body: editing ? { ...record, id: editing.id } : record,
+      })
+      category = item
+      setApiError('')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({
       ...current,
       categories: editing
-        ? current.categories.map((item) => item.id === editing.id ? { ...item, ...category } : item)
+        ? current.categories.map((item) => item.id === editing.id ? category : item)
         : [...current.categories, category],
       expenses: editing
         ? current.expenses.map((expense) => expense.category === editing.name ? { ...expense, category: category.name } : expense)
@@ -542,8 +570,15 @@ export function CategoriesPage() {
     setOpen(true)
   }
 
-  const removeCategory = (id) => {
+  const removeCategory = async (id) => {
+    try {
+      await apiRequest(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({ ...current, categories: current.categories.filter((category) => category.id !== id) }))
+    setApiError('')
   }
 
   return (
@@ -596,21 +631,33 @@ export function CategoriesPage() {
 }
 
 export function BudgetsPage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [month, setMonth] = useState('2024-05')
   const [form, setForm] = useState({ category: data.categories[0]?.name ?? 'Food', budget: '' })
 
-  const addBudget = (event) => {
+  const addBudget = async (event) => {
     event.preventDefault()
-    const record = { id: editing?.id ?? Date.now(), category: form.category, budget: Number(form.budget), month }
+    const record = { category: form.category, budget: Number(form.budget), month }
+    let saved
+    try {
+      const { item } = await apiRequest(`/budgets${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
+        method: editing ? 'PATCH' : 'POST',
+        body: editing ? { ...record, id: editing.id } : record,
+      })
+      saved = item
+      setApiError('')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({
       ...current,
       budgets: editing
-        ? current.budgets.map((item) => item.id === editing.id ? record : item)
-        : [...current.budgets, record],
+        ? current.budgets.map((item) => item.id === editing.id ? saved : item)
+        : [...current.budgets, saved],
     }))
     const spent = data.expenses.filter((item) => item.category === form.category && (!month || belongsToMonth(item.date, month))).reduce((sum, item) => sum + Number(item.amount), 0)
     const progress = Number(form.budget) > 0 ? spent / Number(form.budget) : 0
@@ -626,8 +673,15 @@ export function BudgetsPage() {
     setOpen(true)
   }
 
-  const removeBudget = (id) => {
+  const removeBudget = async (id) => {
+    try {
+      await apiRequest(`/budgets/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({ ...current, budgets: current.budgets.filter((item) => item.id !== id) }))
+    setApiError('')
     const budget = data.budgets.find((item) => item.id === id)
     if (budget) addNotification('budget', 'Budget removed', `${budget.category} budget of ${money(budget.budget)} was removed.`)
   }
@@ -707,20 +761,32 @@ export function BudgetsPage() {
 }
 
 export function SavingsPage() {
-  const { data, setData } = useAppData()
+  const { data, setData, setApiError } = useAppData()
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', current: '0', target: '', date: todayInputDate(), icon: 'laptop' })
 
-  const addGoal = (event) => {
+  const addGoal = async (event) => {
     event.preventDefault()
-    const record = { ...form, current: Number(form.current), target: Number(form.target), id: editing?.id ?? Date.now() }
+    const record = { ...form, current: Number(form.current), target: Number(form.target) }
+    let saved
+    try {
+      const { item } = await apiRequest(`/savings${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
+        method: editing ? 'PATCH' : 'POST',
+        body: editing ? { ...record, id: editing.id } : record,
+      })
+      saved = item
+      setApiError('')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({
       ...current,
       savings: editing
-        ? current.savings.map((goal) => goal.id === editing.id ? record : goal)
-        : [record, ...current.savings],
+        ? current.savings.map((goal) => goal.id === editing.id ? saved : goal)
+        : [saved, ...current.savings],
     }))
     addNotification('savings', editing ? 'Savings goal updated' : 'Savings goal added', `Your ${record.name} savings goal was ${editing ? 'updated' : 'added'}.`)
     setOpen(false)
@@ -735,8 +801,15 @@ export function SavingsPage() {
     setOpen(true)
   }
 
-  const removeGoal = (id) => {
+  const removeGoal = async (id) => {
+    try {
+      await apiRequest(`/savings/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (requestError) {
+      setApiError(requestError.message)
+      return
+    }
     setData((current) => ({ ...current, savings: current.savings.filter((goal) => goal.id !== id) }))
+    setApiError('')
     const goal = data.savings.find((item) => item.id === id)
     if (goal) addNotification('savings', 'Savings goal removed', `Your ${goal.name} savings goal was removed.`)
   }

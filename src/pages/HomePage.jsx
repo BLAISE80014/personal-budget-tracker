@@ -171,10 +171,32 @@ export function HomePage() {
               <li><Target size={16} /> Savings goals and reports</li>
             </ul>
             <Link to="/register" className="primary-button">Create your free account</Link>
-            <small>Demo note: data is saved in this browser on this device.</small>
+            <small>Your budget data stays organized and tied to your account.</small>
           </article>
         </div>
       </section>
+      <footer className="home-footer">
+        <div className="home-footer-inner">
+          <div className="home-footer-brand">
+            <span className="brand-mark">PT</span>
+            <div>
+              <strong>Personal Budget Tracker</strong>
+              <p>Make every money decision with more confidence.</p>
+            </div>
+          </div>
+          <nav className="home-footer-links" aria-label="Footer navigation">
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <a href="#pricing">Pricing</a>
+            <Link to="/login">Log in</Link>
+            <Link to="/register">Create account</Link>
+          </nav>
+          <div className="home-footer-bottom">
+            <span>© {new Date().getFullYear()} Personal Budget Tracker</span>
+            <span>Built for a healthier relationship with money.</span>
+          </div>
+        </div>
+      </footer>
       {showBackToTop && (
         <button
           type="button"
