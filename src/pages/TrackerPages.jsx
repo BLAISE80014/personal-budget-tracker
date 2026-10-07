@@ -7,14 +7,12 @@ import {
   PackageOpen,
   Plus,
   Target,
-  Trash2,
-  TrendingDown,
-  TrendingUp
+  Trash2
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AUTH_ACCOUNT_KEY, AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, defaultUser, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, hashPassword, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
-import { useAppData, useNotifications, useTheme } from '../contexts.js'
-import { AppLayout, DataModal, PublicHeader, SummaryCard, ThemeToggle } from '../components.jsx'
+import { useAppData, useNotifications } from '../contexts.js'
+import { AppLayout, DataModal, PublicHeader, SummaryCard } from '../components.jsx'
 
 export function AuthPage({ mode }) {
   const navigate = useNavigate()
