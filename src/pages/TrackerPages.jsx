@@ -1,13 +1,21 @@
 import { useState } from 'react'
 import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
   CalendarDays,
+  CreditCard,
   Download,
   Edit3,
   MoreHorizontal,
   PackageOpen,
   Plus,
+  PiggyBank,
+  ReceiptText,
   Target,
-  Trash2
+  Trash2,
+  TrendingUp,
+  Wallet
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
@@ -156,125 +164,191 @@ export function AuthPage({ mode }) {
 export function DashboardPage() {
   const { data } = useAppData()
 
-  const totalIncome = data.income.reduce((sum, item) => sum + item.amount, 0)
-  const totalExpenses = data.expenses.reduce((sum, item) => sum + item.amount, 0)
+  const totalIncome = data.income.reduce((sum, item) => sum + Number(item.amount), 0)
+  const totalExpenses = data.expenses.reduce((sum, item) => sum + Number(item.amount), 0)
   const totalBalance = totalIncome - totalExpenses
-  const monthlySavings = data.savings.reduce((sum, goal) => sum + Number(goal.current), 0)
+  const totalSavings = data.savings.reduce((sum, goal) => sum + Number(goal.current), 0)
   const monthlyTotals = getMonthlyTotals(data.income, data.expenses)
   const latestMonth = monthlyTotals.at(-1)
   const previousMonth = monthlyTotals.at(-2)
   const expenseBreakdown = getExpenseBreakdown(data.expenses)
+  const expenseTotal = expenseBreakdown.reduce((sum, item) => sum + item.amount, 0)
   const recentTransactions = [
     ...data.income.map((item) => ({ ...item, type: 'Income', description: item.source, category: 'Income', positive: true })),
     ...data.expenses.map((item) => ({ ...item, type: 'Expense', positive: false })),
-  ].sort((left, right) => new Date(right.date) - new Date(left.date)).slice(0, 4)
+  ].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime()).slice(0, 5)
+  const chartValue = Math.max(...monthlyTotals.map((item) => Math.max(item.income, item.expenses)), 0)
+  const chartCeiling = Math.max(chartValue, 1)
+  const chartLabels = chartValue > 0
+    ? [chartValue, chartValue * 0.66, chartValue * 0.33, 0].map(compactMoney)
+    : ['$0', '$0', '$0', '$0']
 
   return (
     <AppLayout>
-      <main className="dashboard-content">
-        <section className="summary-grid">
-          <SummaryCard title="Total Income" value={compactMoney(totalIncome)} helper="Compared to last month" trend={percentageChange(latestMonth.income, previousMonth.income)} positive />
-          <SummaryCard title="Total Expenses" value={compactMoney(totalExpenses)} helper="This month" trend={percentageChange(latestMonth.expenses, previousMonth.expenses)} positive={latestMonth.expenses <= previousMonth.expenses} />
-          <SummaryCard title="Total Balance" value={compactMoney(totalBalance)} helper="Available funds" trend={totalBalance >= 0 ? 'On track' : 'Over budget'} positive={totalBalance >= 0} />
-          <SummaryCard title="Monthly Savings" value={compactMoney(monthlySavings)} helper="Saved toward your goals" trend={`${data.savings.length} goals`} positive />
+      <main className="dashboard-content dashboard-page">
+        <header className="dashboard-page-heading">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Here’s your financial overview at a glance.</p>
+          </div>
+          <span className="dashboard-period"><CalendarDays size={15} /> Last 6 months</span>
+        </header>
+
+        <section className="dashboard-summary-grid" aria-label="Financial summary">
+          <DashboardSummaryCard icon={Wallet} label="Total Balance" value={compactMoney(totalBalance)} detail="Available funds" variant="balance" trend={totalBalance >= 0 ? 'On track' : 'Over budget'} positive={totalBalance >= 0} />
+          <DashboardSummaryCard icon={TrendingUp} label="Total Income" value={compactMoney(totalIncome)} detail="Compared to last month" trend={percentageChange(latestMonth.income, previousMonth.income)} positive />
+          <DashboardSummaryCard icon={CreditCard} label="Total Expenses" value={compactMoney(totalExpenses)} detail="Across all categories" trend={percentageChange(latestMonth.expenses, previousMonth.expenses)} positive={latestMonth.expenses <= previousMonth.expenses} />
+          <DashboardSummaryCard icon={PiggyBank} label="Savings" value={compactMoney(totalSavings)} detail="Saved toward your goals" trend={`${data.savings.length} active goals`} positive />
         </section>
 
-        <section className="dashboard-grid">
-          <div className="panel large-panel">
+        <section className="dashboard-main-grid">
+          <article className="panel dashboard-panel dashboard-chart-panel">
             <div className="panel-header">
               <h3>Income vs Expenses</h3>
-              <button type="button" className="outline-button">View Report</button>
+              <Link to="/reports" className="dashboard-view-link">View report <ArrowRight size={14} /></Link>
             </div>
-            <div className="chart-card">
-              <div className="bars-chart">
-                {monthlyTotals.map((month) => {
-                  const ceiling = Math.max(...monthlyTotals.map((item) => Math.max(item.income, item.expenses)), 1)
-                  return (
-                  <div key={month.label + month.date.toISOString()} className="bar-column" title={`${month.label}: income ${money(month.income)}, expenses ${money(month.expenses)}`}>
-                    <span className="bar blue" style={{ height: `${Math.max(3, month.income / ceiling * 100)}%` }} />
-                    <span className="bar purple" style={{ height: `${Math.max(3, month.expenses / ceiling * 100)}%` }} />
-                    <small className="bar-label">{month.label}</small>
-                  </div>
-                )})}
+            <div className="dashboard-chart-legend" aria-label="Chart legend">
+              <span><i className="dashboard-legend-income" /> Income</span>
+              <span><i className="dashboard-legend-expenses" /> Expenses</span>
+            </div>
+            <div className="dashboard-chart" role="img" aria-label="Monthly income and expenses for the last six months">
+              <div className="dashboard-y-axis" aria-hidden="true">
+                {chartLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
               </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-header">
-              <h3>Expenses by Category</h3>
-              <button type="button" className="mini-button">See All</button>
-            </div>
-            <div className="donut-wrap">
-              <div className="donut-chart" style={{ background: donutGradient(expenseBreakdown) }}>
-                <div className="donut-center">
-                  <strong>{Math.round(expenseBreakdown[0]?.percent ?? 0)}%</strong>
+              <div className="dashboard-chart-plot">
+                <div className="dashboard-chart-gridlines" aria-hidden="true"><i /><i /><i /><i /></div>
+                <div className="dashboard-bars">
+                  {monthlyTotals.map((month) => (
+                    <div key={`${month.label}-${month.date.toISOString()}`} className="dashboard-bar-group" title={`${month.label}: income ${money(month.income)}, expenses ${money(month.expenses)}`}>
+                      <div className="dashboard-bar-pair">
+                        <span className="dashboard-bar-income" style={{ height: `${Math.max(2, month.income / chartCeiling * 100)}%` }} />
+                        <span className="dashboard-bar-expense" style={{ height: `${Math.max(2, month.expenses / chartCeiling * 100)}%` }} />
+                      </div>
+                      <span className="dashboard-bar-label">{month.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <ul className="legend-list">
-                {expenseBreakdown.slice(0, 4).map((item, index) => (
-                  <li key={item.category}><span className="dot" style={{ background: expenseColors[index % expenseColors.length] }} /> {item.category}</li>
+            </div>
+          </article>
+
+          <article className="panel dashboard-panel dashboard-expense-panel">
+            <div className="panel-header">
+              <h3>Expenses by Category</h3>
+              <Link to="/expenses" className="dashboard-view-link">View all <ArrowRight size={14} /></Link>
+            </div>
+            <div className="dashboard-expense-summary">
+              <div className="dashboard-donut-wrap">
+                <div className={`donut-chart dashboard-donut ${expenseBreakdown.length ? '' : 'dashboard-donut-empty'}`} style={expenseBreakdown.length ? { background: donutGradient(expenseBreakdown) } : undefined}>
+                  <div className="donut-center">
+                    <strong>{compactMoney(expenseTotal)}</strong>
+                    <span>Total spent</span>
+                  </div>
+                </div>
+              </div>
+              <ul className="dashboard-expense-list">
+                {expenseBreakdown.slice(0, 5).map((item, index) => (
+                  <li key={item.category}>
+                    <span className="dashboard-category-name"><i style={{ background: expenseColors[index % expenseColors.length] }} />{item.category}</span>
+                    <span className="dashboard-category-values"><strong>{money(item.amount)}</strong><small>{Math.round(item.percent)}%</small></span>
+                  </li>
                 ))}
-                {expenseBreakdown.length === 0 && <li>No expense data yet</li>}
+                {expenseBreakdown.length === 0 && <li className="dashboard-empty">No expense data yet</li>}
               </ul>
             </div>
-          </div>
+          </article>
         </section>
 
-        <section className="bottom-grid">
-          <div className="panel">
+        <section className="dashboard-bottom-grid">
+          <article className="panel dashboard-panel dashboard-transactions-panel">
             <div className="panel-header">
               <h3>Recent Transactions</h3>
+              <Link to="/reports" className="dashboard-view-link">View all <ArrowRight size={14} /></Link>
             </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Date</th>
-                  <th>Category</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransactions.map((item) => (
-                  <tr key={`${item.type}-${item.id}`}>
-                    <td>{item.description}</td>
-                    <td>{formatDate(item.date)}</td>
-                    <td>{item.category}</td>
-                    <td className={`amount ${item.positive ? 'positive' : 'negative'}`}>{item.positive ? '+' : '-'}{money(item.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="panel">
-            <div className="panel-header">
-              <h3>Budgets Overview</h3>
-            </div>
-            <div className="budget-stack">
-              {data.budgets.map((budget) => {
-                const spent = data.expenses.filter((item) => item.category === budget.category).reduce((sum, item) => sum + Number(item.amount), 0)
-                const progress = budget.budget > 0 ? Math.min(100, (spent / budget.budget) * 100) : 0
+            <div className="dashboard-transaction-list">
+              {recentTransactions.map((item) => {
+                const Icon = item.positive ? Wallet : ReceiptText
                 return (
-                  <div key={budget.id} className="budget-row">
-                    <div className="budget-meta">
-                      <span>{budget.category}</span>
-                      <strong>{money(spent)}</strong>
-                    </div>
-                    <div className="progress-bar"><span style={{ width: `${progress}%` }} /></div>
-                    <div className="small-row">
-                      <span>{Math.round(progress)}%</span>
-                      <span>{money(budget.budget)}</span>
-                    </div>
+                  <div key={`${item.type}-${item.id}`} className="dashboard-transaction">
+                    <span className={`dashboard-transaction-icon ${item.positive ? 'income' : 'expense'}`}><Icon size={17} /></span>
+                    <span className="dashboard-transaction-name"><strong>{item.description}</strong><small>{item.category} · {formatDate(item.date)}</small></span>
+                    <strong className={`dashboard-transaction-amount ${item.positive ? 'positive' : 'negative'}`}>{item.positive ? '+' : '-'}{money(item.amount)}</strong>
                   </div>
                 )
               })}
+              {recentTransactions.length === 0 && <p className="dashboard-empty">Transactions you add will appear here.</p>}
             </div>
-          </div>
+          </article>
+
+          <article className="panel dashboard-panel dashboard-overview-panel">
+            <div className="panel-header">
+              <h3>Budgets Overview</h3>
+              <Link to="/budgets" className="dashboard-view-link">View all <ArrowRight size={14} /></Link>
+            </div>
+            <div className="dashboard-progress-list">
+              {data.budgets.slice(0, 4).map((budget) => {
+                const spent = data.expenses
+                  .filter((item) => item.category === budget.category && (!budget.month || belongsToMonth(item.date, budget.month)))
+                  .reduce((sum, item) => sum + Number(item.amount), 0)
+                const progress = budget.budget > 0 ? Math.min(100, (spent / budget.budget) * 100) : 0
+                return (
+                  <div key={budget.id} className="dashboard-progress-row">
+                    <div className="dashboard-progress-heading">
+                      <strong>{budget.category}</strong>
+                      <span>{money(spent)} <i>/</i> {money(budget.budget)}</span>
+                    </div>
+                    <div className="progress-bar dashboard-progress-bar"><span style={{ width: `${progress}%` }} /></div>
+                    <span className="dashboard-progress-percent">{Math.round(progress)}% used</span>
+                  </div>
+                )
+              })}
+              {data.budgets.length === 0 && <p className="dashboard-empty">Set a budget to track your spending.</p>}
+            </div>
+          </article>
+
+          <article className="panel dashboard-panel dashboard-savings-panel">
+            <div className="panel-header">
+              <h3>Savings Overview</h3>
+              <Link to="/savings" className="dashboard-view-link">View all <ArrowRight size={14} /></Link>
+            </div>
+            <div className="dashboard-savings-list">
+              {data.savings.slice(0, 4).map((goal) => {
+                const progress = goal.target > 0 ? Math.min(100, Number(goal.current) / Number(goal.target) * 100) : 0
+                return (
+                  <div key={goal.id} className="dashboard-progress-row">
+                    <div className="dashboard-progress-heading">
+                      <strong><Target size={15} />{goal.name}</strong>
+                      <span>{money(goal.current)} <i>/</i> {money(goal.target)}</span>
+                    </div>
+                    <div className="progress-bar dashboard-progress-bar savings"><span style={{ width: `${progress}%` }} /></div>
+                    <span className="dashboard-progress-percent">{Math.round(progress)}% saved</span>
+                  </div>
+                )
+              })}
+              {data.savings.length === 0 && <p className="dashboard-empty">Create a savings goal to follow your progress.</p>}
+            </div>
+          </article>
         </section>
       </main>
     </AppLayout>
+  )
+}
+
+function DashboardSummaryCard({ icon: Icon, label, value, detail, trend, positive, variant }) {
+  const TrendIcon = positive ? ArrowUpRight : ArrowDownRight
+  return (
+    <article className="dashboard-summary-card">
+      <div className="dashboard-summary-top">
+        <span className={`dashboard-summary-icon ${variant || ''}`}><Icon size={18} /></span>
+        <span className={`dashboard-summary-trend ${positive ? 'positive' : 'negative'}`}>
+          {variant !== 'balance' && <TrendIcon size={14} />}
+          {trend}
+        </span>
+      </div>
+      <span className="dashboard-summary-label">{label}</span>
+      <strong className="dashboard-summary-value" title={value}>{value}</strong>
+      <span className="dashboard-summary-detail">{detail}</span>
+    </article>
   )
 }
 
@@ -635,7 +709,10 @@ export function BudgetsPage() {
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [month, setMonth] = useState('2024-05')
+  const [month, setMonth] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
   const [form, setForm] = useState({ category: data.categories[0]?.name ?? 'Food', budget: '' })
 
   const addBudget = async (event) => {
@@ -765,35 +842,39 @@ export function SavingsPage() {
   const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [savingGoal, setSavingGoal] = useState(false)
+  const [savedMessage, setSavedMessage] = useState('')
   const [form, setForm] = useState({ name: '', current: '0', target: '', date: todayInputDate(), icon: 'laptop' })
 
   const addGoal = async (event) => {
     event.preventDefault()
     const record = { ...form, current: Number(form.current), target: Number(form.target) }
-    let saved
+    setSavingGoal(true)
     try {
       const { item } = await apiRequest(`/savings${editing ? `/${encodeURIComponent(editing.id)}` : ''}`, {
-        method: editing ? 'PATCH' : 'POST',
+        method: editing ? 'PUT' : 'POST',
         body: editing ? { ...record, id: editing.id } : record,
       })
-      saved = item
+      setData((current) => ({
+        ...current,
+        savings: editing
+          ? current.savings.map((goal) => goal.id === editing.id ? item : goal)
+          : [item, ...current.savings],
+      }))
       setApiError('')
+      setSavedMessage(`“${item.name}” ${editing ? 'updated' : 'saved'} successfully.`)
+      addNotification('savings', editing ? 'Savings goal updated' : 'Savings goal added', `Your ${record.name} savings goal was ${editing ? 'updated' : 'added'}.`)
+      setOpen(false)
+      setEditing(null)
     } catch (requestError) {
       setApiError(requestError.message)
-      return
+    } finally {
+      setSavingGoal(false)
     }
-    setData((current) => ({
-      ...current,
-      savings: editing
-        ? current.savings.map((goal) => goal.id === editing.id ? saved : goal)
-        : [saved, ...current.savings],
-    }))
-    addNotification('savings', editing ? 'Savings goal updated' : 'Savings goal added', `Your ${record.name} savings goal was ${editing ? 'updated' : 'added'}.`)
-    setOpen(false)
-    setEditing(null)
   }
 
   const openForm = (goal = null) => {
+    setSavedMessage('')
     setEditing(goal)
     setForm(goal
       ? { ...goal, date: toInputDate(goal.date) }
@@ -818,7 +899,10 @@ export function SavingsPage() {
     <AppLayout>
       <main className="page-panel">
         <div className="page-header-row">
-          <h2>Savings Goals</h2>
+          <div>
+            <h2>Savings Goals</h2>
+            {savedMessage && <p className="form-success" role="status">{savedMessage}</p>}
+          </div>
           <button type="button" className="primary-button" onClick={() => openForm()}>
             <Plus size={14} /> Add Goal
           </button>
@@ -870,6 +954,7 @@ export function SavingsPage() {
         onClose={() => setOpen(false)}
         onSave={addGoal}
         submitLabel={editing ? 'Update Goal' : 'Save Goal'}
+        isSaving={savingGoal}
       />}
     </AppLayout>
   )

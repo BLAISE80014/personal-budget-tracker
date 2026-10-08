@@ -13,6 +13,7 @@ const publicUser = (user) => ({
   fullName: user.fullName,
   email: user.email,
   phone: user.phone || '',
+  avatar: user.avatar || '',
   memberSince: user.createdAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
 })
 

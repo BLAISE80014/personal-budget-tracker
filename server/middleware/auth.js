@@ -15,7 +15,7 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ success: false, error: { message: 'The access token is invalid.' } })
     }
 
-    const user = await User.findById(payload.sub).select('_id fullName email phone createdAt')
+    const user = await User.findById(payload.sub).select('_id fullName email phone avatar createdAt')
     if (!user) return res.status(401).json({ success: false, error: { message: 'The account no longer exists.' } })
     await ensureFinanceData(user._id)
     req.user = user

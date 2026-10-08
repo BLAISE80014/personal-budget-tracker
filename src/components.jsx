@@ -19,11 +19,11 @@ import {
   Wallet
 } from 'lucide-react'
 import { Link, Navigate, NavLink, useNavigate } from 'react-router-dom'
-import { AUTH_STORAGE_KEY, initials, money, navItems, settingSections } from './app-data.js'
+import { AUTH_STORAGE_KEY, initials, money, navItems, profileAvatarOptions, settingSections } from './app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
 
-export function DataModal({ title, form, setForm, fields, onClose, onSave, submitLabel = 'Save' }) {
+export function DataModal({ title, form, setForm, fields, onClose, onSave, submitLabel = 'Save', isSaving = false }) {
   const changeField = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
@@ -79,7 +79,7 @@ export function DataModal({ title, form, setForm, fields, onClose, onSave, submi
           ))}
           <div className="modal-actions">
             <button type="button" className="outline-button" onClick={onClose}>Cancel</button>
-            <button type="submit" className="primary-button">{submitLabel}</button>
+            <button type="submit" className="primary-button" disabled={isSaving}>{isSaving ? 'Saving…' : submitLabel}</button>
           </div>
         </form>
       </section>
@@ -162,6 +162,39 @@ export function NotificationList({ items, onRead }) {
         )
       })}
     </div>
+  )
+}
+
+const avatarPalettes = {
+  violet: { background: '#dedbff', skin: '#b97854', hair: '#34264d', shirt: '#7063d9' },
+  ocean: { background: '#d6eff5', skin: '#e3ae83', hair: '#312b34', shirt: '#3986a2' },
+  meadow: { background: '#dff1df', skin: '#87543f', hair: '#211d1d', shirt: '#4f966c' },
+  berry: { background: '#f4dce9', skin: '#f0c29e', hair: '#623948', shirt: '#ba5f87' },
+  sunset: { background: '#fae6d2', skin: '#d2956c', hair: '#382c25', shirt: '#d27a48' },
+}
+
+export function ProfileAvatar({ avatar, name, className = '' }) {
+  const palette = avatarPalettes[avatar]
+  const label = profileAvatarOptions.find((option) => option.id === avatar)?.label
+  const isUploadedImage = typeof avatar === 'string' && avatar.startsWith('data:image/jpeg;base64,')
+
+  return (
+    <span className={`avatar ${palette || isUploadedImage ? 'profile-avatar-image' : ''} ${className}`} role={palette || isUploadedImage ? 'img' : undefined} aria-label={isUploadedImage ? 'Uploaded profile picture' : palette ? `${label} profile avatar` : undefined}>
+      {isUploadedImage ? (
+        <img src={avatar} alt="" />
+      ) : palette ? (
+        <svg viewBox="0 0 72 72" aria-hidden="true">
+          <circle cx="36" cy="36" r="36" fill={palette.background} />
+          <path d="M13 72c2-14 11-22 23-22s21 8 23 22" fill={palette.shirt} />
+          <path d="M25 48c2-5 2-9 1-13h20c-1 5-1 9 2 13-4 5-8 7-12 7s-8-2-11-7" fill={palette.skin} />
+          <path d="M20 34c-2-16 5-25 17-25 13 0 19 10 15 27l-4 7-2-13c-7 1-14-1-20-5l-2 18z" fill={palette.hair} />
+          <ellipse cx="29" cy="34" rx="2" ry="1.5" fill="#382b2a" />
+          <ellipse cx="43" cy="34" rx="2" ry="1.5" fill="#382b2a" />
+          <path d="M32 42c2 2 6 2 8 0" fill="none" stroke="#8d4e49" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M29 29c2-1 4-1 6 0m4 0c2-1 4-1 6 0" fill="none" stroke={palette.hair} strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      ) : initials(name)}
+    </span>
   )
 }
 
@@ -300,7 +333,7 @@ export function DashboardHeader() {
         </div>
         <ThemeToggle />
         <div className="profile-mini">
-          <div className="avatar">{initials(data.user.fullName)}</div>
+          <ProfileAvatar avatar={data.user.avatar} name={data.user.fullName} />
           <div>
             <strong>{data.user.fullName}</strong>
             <small>Premium</small>

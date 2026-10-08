@@ -20,6 +20,7 @@ export const profileSchema = z.object({
   fullName: shortText(100),
   email: z.string().trim().email().max(254),
   phone: z.string().trim().max(40).optional().default(''),
+  avatar: z.string().max(200_000).regex(/^$|^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/).optional(),
 }).strict()
 
 export const passwordSchema = z.object({

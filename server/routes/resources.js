@@ -35,7 +35,7 @@ router.post('/:resource', async (req, res) => {
   res.status(201).json({ success: true, data: { item: serialize(created.toObject()) } })
 })
 
-router.patch('/:resource/:id', async (req, res) => {
+async function updateRecord(req, res) {
   const record = validate(resourceSchemas[req.resource], { ...req.body, id: req.params.id })
   const Model = trackerRecordModels[req.resource]
   const current = req.resource === 'categories'
@@ -57,7 +57,10 @@ router.patch('/:resource/:id', async (req, res) => {
     ])
   }
   res.json({ success: true, data: { item: serialize(previous) } })
-})
+}
+
+router.put('/:resource/:id', updateRecord)
+router.patch('/:resource/:id', updateRecord)
 
 router.delete('/:resource/:id', async (req, res) => {
   const Model = trackerRecordModels[req.resource]

@@ -35,8 +35,17 @@ export const defaultUser = {
   fullName: 'Jane Cooper',
   email: 'jane.cooper@example.com',
   phone: '+1 (415) 234-9283',
+  avatar: '',
   memberSince: 'May 11, 2024',
 }
+
+export const profileAvatarOptions = [
+  { id: 'violet', label: 'Violet' },
+  { id: 'ocean', label: 'Ocean' },
+  { id: 'meadow', label: 'Meadow' },
+  { id: 'berry', label: 'Berry' },
+  { id: 'sunset', label: 'Sunset' },
+]
 
 export const defaultData = {
   income: [

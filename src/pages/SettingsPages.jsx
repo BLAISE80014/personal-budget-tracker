@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   CalendarDays,
   CheckCheck,
@@ -13,9 +13,9 @@ import {
   UserRound
 } from 'lucide-react'
 import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
-import { initials, settingSections } from '../app-data.js'
+import { settingSections } from '../app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from '../contexts.js'
-import { AppLayout, DataModal, NotificationList, PasswordChangeForm, ToggleSetting } from '../components.jsx'
+import { AppLayout, DataModal, NotificationList, PasswordChangeForm, ProfileAvatar, ToggleSetting } from '../components.jsx'
 import { apiRequest } from '../api/client.js'
 
 export function SettingsPage() {
@@ -79,13 +79,14 @@ export function SettingsPage() {
             {section === 'profile' && (
               <div className="settings-profile-card">
                 <div className="settings-profile-identity">
-                  <div className="avatar large-avatar">{initials(data.user.fullName)}</div>
+                  <ProfileAvatar avatar={data.user.avatar} name={data.user.fullName} className="large-avatar" />
                   <div><h4>{data.user.fullName}</h4><p>{data.user.email}</p></div>
                 </div>
                 <div className="settings-detail-grid">
                   <div><small>Phone</small><strong>{data.user.phone || 'Not provided'}</strong></div>
                   <div><small>Member since</small><strong>{data.user.memberSince}</strong></div>
                 </div>
+                <NavLink to="/profile" className="secondary-button">Change profile picture</NavLink>
                 <button type="button" className="primary-button" onClick={() => { setProfileForm({ fullName: data.user.fullName, email: data.user.email, phone: data.user.phone }); setEditing(true) }}>Edit Profile</button>
               </div>
             )}
@@ -196,8 +197,81 @@ export function NotificationsPage() {
 export function ProfilePage() {
   const { data, setData, setApiError } = useAppData()
   const user = data.user
+  const avatarInputRef = useRef(null)
   const [editing, setEditing] = useState(false)
+  const [savingAvatar, setSavingAvatar] = useState(false)
+  const [avatarMessage, setAvatarMessage] = useState('')
+  const [avatarDraft, setAvatarDraft] = useState(null)
+  const avatarPreview = avatarDraft ?? user.avatar
   const [profileForm, setProfileForm] = useState({ fullName: user.fullName, email: user.email, phone: user.phone })
+
+  const chooseAvatar = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    setAvatarMessage('')
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAvatarMessage('Choose a JPG, PNG, or WEBP image.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setAvatarMessage('Choose an image smaller than 10 MB.')
+      return
+    }
+
+    try {
+      const source = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(new Error('The selected image could not be read.'))
+        reader.readAsDataURL(file)
+      })
+      const image = await new Promise((resolve, reject) => {
+        const loadedImage = new Image()
+        loadedImage.onload = () => resolve(loadedImage)
+        loadedImage.onerror = () => reject(new Error('The selected image could not be opened.'))
+        loadedImage.src = source
+      })
+      const canvas = document.createElement('canvas')
+      const size = 192
+      canvas.width = size
+      canvas.height = size
+      const context = canvas.getContext('2d')
+      if (!context) throw new Error('Image processing is unavailable in this browser.')
+      context.fillStyle = '#ffffff'
+      context.fillRect(0, 0, size, size)
+      const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight)
+      const width = image.naturalWidth * scale
+      const height = image.naturalHeight * scale
+      context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height)
+      const optimizedImage = canvas.toDataURL('image/jpeg', 0.78)
+      if (optimizedImage.length > 200_000) throw new Error('This image could not be reduced enough. Please choose a smaller image.')
+      setAvatarDraft(optimizedImage)
+      setAvatarMessage('Image ready. Save to update your profile picture.')
+    } catch (error) {
+      setAvatarMessage(error.message)
+    }
+  }
+
+  const saveAvatar = async () => {
+    setAvatarMessage('')
+    setSavingAvatar(true)
+    try {
+      const { user: updated } = await apiRequest('/auth/profile', {
+        method: 'PATCH',
+        body: { fullName: user.fullName, email: user.email, phone: user.phone, avatar: avatarPreview },
+      })
+      setData((current) => ({ ...current, user: updated }))
+      setAvatarDraft(null)
+      setApiError('')
+      setAvatarMessage('Profile picture updated.')
+    } catch (requestError) {
+      setApiError(requestError.message)
+      setAvatarMessage('Could not save the profile picture.')
+    } finally {
+      setSavingAvatar(false)
+    }
+  }
 
   const saveProfile = async (event) => {
     event.preventDefault()
@@ -218,12 +292,48 @@ export function ProfilePage() {
       <main className="page-panel profile-layout">
         <div className="profile-card">
           <div className="profile-header">
-            <div className="avatar large-avatar">{initials(user.fullName)}</div>
+            <ProfileAvatar avatar={avatarPreview} name={user.fullName} className="large-avatar" />
             <div>
               <h3>{user.fullName}</h3>
               <p>{user.email}</p>
             </div>
           </div>
+
+          <section className="profile-avatar-picker" aria-labelledby="profile-avatar-heading">
+            <div>
+              <h4 id="profile-avatar-heading">Profile picture</h4>
+              <p>Upload an image from your device (Recommended).</p>
+            </div>
+            <input
+              ref={avatarInputRef}
+              className="profile-avatar-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Upload a profile picture"
+              onChange={chooseAvatar}
+            />
+            <div className="profile-avatar-actions">
+              <button type="button" className="secondary-button" onClick={() => avatarInputRef.current?.click()} disabled={savingAvatar}>
+                Upload image
+              </button>
+              {avatarDraft !== null && avatarPreview !== user.avatar && (
+                <button type="button" className="primary-button" onClick={saveAvatar} disabled={savingAvatar}>
+                  {savingAvatar ? 'Saving…' : 'Save picture'}
+                </button>
+              )}
+              {avatarPreview && (
+                <button
+                  type="button"
+                  className="profile-avatar-remove"
+                  onClick={() => { setAvatarDraft(''); setAvatarMessage('Save to remove your current profile picture.') }}
+                  disabled={savingAvatar}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <span className="profile-avatar-status" aria-live="polite">{avatarMessage || (savingAvatar ? 'Saving profile picture…' : '')}</span>
+          </section>
 
           <div className="profile-meta">
             <div><span>Phone</span><strong>{user.phone}</strong></div>
