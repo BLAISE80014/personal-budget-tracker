@@ -607,6 +607,7 @@ export function ExpensesPage() {
 
 export function CategoriesPage() {
   const { data, setData, setApiError } = useAppData()
+  const { addNotification } = useNotifications()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', icon: 'food' })
@@ -638,6 +639,11 @@ export function CategoriesPage() {
         ? current.budgets.map((budget) => budget.category === editing.name ? { ...budget, category: category.name } : budget)
         : current.budgets,
     }))
+    addNotification(
+      'category',
+      editing ? 'Category updated' : 'Category added',
+      `The “${category.name}” category was ${editing ? 'updated' : 'added'}.`,
+    )
     setOpen(false)
     setEditing(null)
   }
@@ -649,6 +655,7 @@ export function CategoriesPage() {
   }
 
   const removeCategory = async (id) => {
+    const category = data.categories.find((item) => item.id === id)
     try {
       await apiRequest(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE' })
     } catch (requestError) {
@@ -657,6 +664,7 @@ export function CategoriesPage() {
     }
     setData((current) => ({ ...current, categories: current.categories.filter((category) => category.id !== id) }))
     setApiError('')
+    if (category) addNotification('category', 'Category removed', `The “${category.name}” category was removed.`)
   }
 
   return (

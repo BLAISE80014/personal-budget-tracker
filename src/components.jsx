@@ -4,6 +4,7 @@ import {
   BellRing,
   ChevronRight,
   CreditCard,
+  Landmark,
   LogOut,
   Moon,
   Monitor,
@@ -128,6 +129,7 @@ export function PublicHeader({ minimal = false }) {
 const notificationIcon = (type) => ({
   account: UserRound,
   budget: PiggyBank,
+  category: Landmark,
   expense: CreditCard,
   income: Wallet,
   savings: Target,
