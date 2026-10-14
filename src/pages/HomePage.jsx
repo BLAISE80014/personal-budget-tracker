@@ -23,6 +23,41 @@ export function HomePage() {
     return () => window.removeEventListener('scroll', updateScrollButton)
   }, [])
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        className="budget-loader-screen flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#f5f8ff] px-6 text-center dark:bg-[#0b1220]"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="budget-loader-content flex flex-col items-center">
+          <div className="relative mb-7 flex h-28 w-28 items-center justify-center">
+            <div className="budget-loader-ring absolute inset-0 rounded-full" aria-hidden="true" />
+            <div className="budget-loader-icon relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.4rem] border border-blue-100 bg-white text-[var(--primary)] dark:border-slate-700 dark:bg-slate-800">
+              <Wallet size={34} strokeWidth={1.7} aria-hidden="true" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
+            PersonalBudgetTracker
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 sm:text-base dark:text-slate-400">
+            Preparing your financial dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home-shell min-h-screen">
       <PublicHeader />

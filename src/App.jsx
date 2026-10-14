@@ -3,6 +3,7 @@ import { AppDataProvider, NotificationsProvider, PreferencesProvider, ThemeProvi
 import { ProtectedRoute } from './components.jsx'
 import { AuthPage, BudgetsPage, CategoriesPage, DashboardPage, ExpensesPage, IncomePage, ReportsPage, SavingsPage } from './pages/TrackerPages.jsx'
 import { NotificationsPage, ProfilePage, SettingsPage } from './pages/SettingsPages.jsx'
+import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPages.jsx'
 import { HomePage } from './pages/HomePage.jsx'
 import './App.css'
 
@@ -17,6 +18,8 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<AuthPage mode="login" />} />
                 <Route path="/register" element={<AuthPage mode="register" />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/income" element={<ProtectedRoute><IncomePage /></ProtectedRoute>} />
                 <Route path="/expenses" element={<ProtectedRoute><ExpensesPage /></ProtectedRoute>} />

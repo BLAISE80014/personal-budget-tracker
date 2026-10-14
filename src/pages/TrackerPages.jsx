@@ -17,16 +17,18 @@ import {
   TrendingUp,
   Wallet
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
 import { useAppData, useNotifications } from '../contexts.js'
 import { AppLayout, DataModal, PublicHeader, SummaryCard } from '../components.jsx'
 import { apiRequest, setApiToken } from '../api/client.js'
 
 export function AuthPage({ mode }) {
+  const location = useLocation()
   const navigate = useNavigate()
   const { setData, setSessionToken } = useAppData()
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState(location.state?.notice || '')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     fullName: '',
@@ -44,6 +46,7 @@ export function AuthPage({ mode }) {
   const onSubmit = async (event) => {
     event.preventDefault()
     setError('')
+    setNotice('')
     const email = form.email.trim().toLowerCase()
     if (isRegister && form.password !== form.confirmPassword) {
       setError('Passwords do not match.')
@@ -137,7 +140,7 @@ export function AuthPage({ mode }) {
             </label>
           )}
 
-          {!isRegister && <a href="/login" className="muted-link">Forgot password?</a>}
+          {!isRegister && <Link to="/forgot-password" className="muted-link">Forgot password?</Link>}
 
           {isRegister && (
             <label className="checkbox-row">
@@ -147,6 +150,7 @@ export function AuthPage({ mode }) {
           )}
 
           {error && <p className="form-error" role="alert">{error}</p>}
+          {notice && <p className="password-reset-success" role="status">{notice}</p>}
           <button type="submit" className="primary-button large-button" disabled={submitting}>
             {submitting ? 'Please wait…' : isRegister ? 'Register' : 'Login'}
           </button>

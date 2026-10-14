@@ -165,14 +165,23 @@ export const hashPassword = async (password) => {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 export const formatDate = (value) => {
-  const date = new Date(`${value}T00:00:00`)
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value)
   if (Number.isNaN(date.getTime())) return value
   const preferences = readPreferences()
   const locale = localeForLanguage(preferences.language)
-  if (preferences.dateFormat === 'MM/dd/yyyy') return date.toLocaleDateString(locale, { month: '2-digit', day: '2-digit', year: 'numeric' })
-  if (preferences.dateFormat === 'dd/MM/yyyy') return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
-  if (preferences.dateFormat === 'yyyy-MM-dd') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
+  const showYear = date.getFullYear() !== new Date().getFullYear()
+  const year = showYear ? String(date.getFullYear()) : ''
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  if (preferences.dateFormat === 'MM/dd/yyyy') return `${month}/${day}${year ? `/${year}` : ''}`
+  if (preferences.dateFormat === 'dd/MM/yyyy') return `${day}/${month}${year ? `/${year}` : ''}`
+  if (preferences.dateFormat === 'yyyy-MM-dd') return year ? `${year}-${month}-${day}` : `${month}-${day}`
+  return date.toLocaleDateString(locale, {
+    month: 'short',
+    day: 'numeric',
+    ...(showYear ? { year: 'numeric' } : {}),
+  })
 }
 
 export const categoryIcons = {

@@ -24,6 +24,7 @@ export function SettingsPage() {
   const { data, setData, setApiError } = useAppData()
   const { theme, setTheme } = useTheme()
   const { preferences, setPreferences } = usePreferences()
+  const dateFormatExampleYear = new Date().getFullYear()
   const validSection = settingSections.some((item) => item.id === section)
   const [editing, setEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({ fullName: data.user.fullName, email: data.user.email, phone: data.user.phone })
@@ -152,7 +153,7 @@ export function SettingsPage() {
                 </label>
                 <label><span><CalendarDays size={16} /> Date format</span>
                   <select value={preferences.dateFormat} onChange={(event) => setPreferences((current) => ({ ...current, dateFormat: event.target.value }))}>
-                    <option value="MMM d, yyyy">May 20, 2024</option><option value="MM/dd/yyyy">05/20/2024</option><option value="dd/MM/yyyy">20/05/2024</option><option value="yyyy-MM-dd">2024-05-20</option>
+                    <option value="MMM d, yyyy">May 20, {dateFormatExampleYear}</option><option value="MM/dd/yyyy">05/20/{dateFormatExampleYear}</option><option value="dd/MM/yyyy">20/05/{dateFormatExampleYear}</option><option value="yyyy-MM-dd">{dateFormatExampleYear}-05-20</option>
                   </select>
                 </label>
                 <p className="settings-help">Currency and date changes are reflected throughout the tracker.</p>

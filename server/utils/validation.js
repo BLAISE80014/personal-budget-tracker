@@ -16,6 +16,15 @@ export const loginSchema = z.object({
   password: z.string().min(1).max(128),
 }).strict()
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email().max(254),
+}).strict()
+
+export const resetPasswordSchema = z.object({
+  token: z.string().regex(/^[a-f0-9]{64}$/i),
+  newPassword: z.string().min(8).max(128),
+}).strict()
+
 export const profileSchema = z.object({
   fullName: shortText(100),
   email: z.string().trim().email().max(254),

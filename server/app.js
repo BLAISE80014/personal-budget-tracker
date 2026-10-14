@@ -43,6 +43,15 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, error: { message: 'Too many authentication attempts. Try again in 15 minutes.' } },
 })
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { success: false, error: { message: 'Too many password reset attempts. Try again in 15 minutes.' } },
+})
+app.use('/api/auth/forgot-password', passwordResetLimiter)
+app.use('/api/auth/reset-password', passwordResetLimiter)
 app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/dashboard', requireAuth, dashboardRoutes)
 app.use('/api/data', requireAuth, dataRoutes)
