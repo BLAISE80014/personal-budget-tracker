@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   CreditCard,
   Landmark,
@@ -10,11 +10,28 @@ import {
   Wallet,
   ArrowUp
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppData } from '../contexts.js'
 import { PublicHeader } from '../components.jsx'
+import LoadingScreen from '../components/LoadingScreen.jsx'
+import { apiRequest } from '../api/client.js'
+import RoleSelectionDialog from '../components/RoleSelectionDialog.jsx'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [roleSelectionIntent, setRoleSelectionIntent] = useState('')
+  const [connectionError, setConnectionError] = useState(() => (
+    navigator.onLine ? '' : 'You appear to be offline. Check your connection and try again.'
+  ))
+  const [checkingConnection, setCheckingConnection] = useState(false)
+  const { loading, dataError, retryData, sessionToken } = useAppData()
+  const closeRoleSelection = useCallback(() => setRoleSelectionIntent(''), [])
+  const continueRoleSelection = (role) => {
+    navigate(role === 'admin' ? '/admin/login' : roleSelectionIntent === 'login' ? '/login' : '/register')
+    closeRoleSelection()
+  }
+  const openRoleSelection = (intent) => setRoleSelectionIntent(intent)
 
   useEffect(() => {
     const updateScrollButton = () => setShowBackToTop(window.scrollY > 320)
@@ -23,44 +40,42 @@ export function HomePage() {
     return () => window.removeEventListener('scroll', updateScrollButton)
   }, [])
 
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+    const handleOffline = () => {
+      setConnectionError('You appear to be offline. Check your connection and try again.')
+    }
+    const handleOnline = () => setConnectionError('')
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('online', handleOnline)
+    return () => {
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('online', handleOnline)
+    }
+  }, [])
 
-    return () => clearTimeout(timer);
-  }, []);
+  const retryConnection = async () => {
+    setCheckingConnection(true)
+    try {
+      await apiRequest('/health', { authenticated: false })
+      setConnectionError('')
+    } catch (requestError) {
+      setConnectionError(requestError.message)
+    } finally {
+      setCheckingConnection(false)
+    }
+  }
 
-  if (loading) {
-    return (
-      <div
-        className="budget-loader-screen flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#f5f8ff] px-6 text-center dark:bg-[#0b1220]"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="budget-loader-content flex flex-col items-center">
-          <div className="relative mb-7 flex h-28 w-28 items-center justify-center">
-            <div className="budget-loader-ring absolute inset-0 rounded-full" aria-hidden="true" />
-            <div className="budget-loader-icon relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.4rem] border border-blue-100 bg-white text-[var(--primary)] dark:border-slate-700 dark:bg-slate-800">
-              <Wallet size={34} strokeWidth={1.7} aria-hidden="true" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
-            PersonalBudgetTracker
-          </h1>
-          <p className="mt-2 text-sm text-slate-500 sm:text-base dark:text-slate-400">
-            Preparing your financial dashboard...
-          </p>
-        </div>
-      </div>
-    );
+  if (connectionError) {
+    return <LoadingScreen error={connectionError} onRetry={retryConnection} retrying={checkingConnection} />
+  }
+
+  if (sessionToken && (loading || dataError)) {
+    return <LoadingScreen error={dataError} onRetry={retryData} />
   }
 
   return (
     <div className="home-shell min-h-screen">
-      <PublicHeader />
+      <PublicHeader onAuthAction={openRoleSelection} />
 
       <main className="hero-shell">
         <section className="hero-section">
@@ -73,7 +88,7 @@ export function HomePage() {
             </p>
 
             <div className="cta-row">
-              <Link to="/register" className="primary-button">Get Started</Link>
+              <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Get Started</button>
               <a href="#features" className="secondary-button">Learn More</a>
             </div>
           </div>
@@ -183,7 +198,7 @@ export function HomePage() {
             Instead of guessing where your money went, you can review your activity and make your next
             decision with more confidence.
           </p>
-          <Link to="/register" className="primary-button">Start tracking</Link>
+          <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Start tracking</button>
         </div>
       </section>
 
@@ -205,7 +220,7 @@ export function HomePage() {
               <li><Landmark size={16} /> Categories and budgets</li>
               <li><Target size={16} /> Savings goals and reports</li>
             </ul>
-            <Link to="/register" className="primary-button">Create your free account</Link>
+            <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Create your free account</button>
             <small>Your budget data stays organized and tied to your account.</small>
           </article>
         </div>
@@ -223,8 +238,8 @@ export function HomePage() {
             <a href="#features">Features</a>
             <a href="#about">About</a>
             <a href="#pricing">Pricing</a>
-            <Link to="/login">Log in</Link>
-            <Link to="/register">Create account</Link>
+            <button type="button" className="home-footer-auth-action" onClick={() => openRoleSelection('login')}>Log in</button>
+            <button type="button" className="home-footer-auth-action" onClick={() => openRoleSelection('register')}>Create account</button>
           </nav>
           <div className="home-footer-bottom">
             <span>© {new Date().getFullYear()} Personal Budget Tracker</span>
@@ -241,6 +256,13 @@ export function HomePage() {
         >
           <ArrowUp size={19} />
         </button>
+      )}
+      {roleSelectionIntent && (
+        <RoleSelectionDialog
+          intent={roleSelectionIntent}
+          onClose={closeRoleSelection}
+          onContinue={continueRoleSelection}
+        />
       )}
     </div>
   )

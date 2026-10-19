@@ -5,11 +5,13 @@ import rateLimit from 'express-rate-limit'
 import { requireAuth } from './middleware/auth.js'
 import { errorHandler, notFound } from './middleware/errors.js'
 import authRoutes from './routes/auth.js'
+import adminRoutes from './routes/admin.js'
 import dashboardRoutes from './routes/dashboard.js'
 import dataRoutes from './routes/data.js'
 import notificationRoutes from './routes/notifications.js'
 import preferenceRoutes from './routes/preferences.js'
 import resourceRoutes from './routes/resources.js'
+import { requireAdmin } from './middleware/require-admin.js'
 
 const app = express()
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5174,http://localhost:5173')
@@ -53,6 +55,7 @@ const passwordResetLimiter = rateLimit({
 app.use('/api/auth/forgot-password', passwordResetLimiter)
 app.use('/api/auth/reset-password', passwordResetLimiter)
 app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/admin', requireAuth, requireAdmin, adminRoutes)
 app.use('/api/dashboard', requireAuth, dashboardRoutes)
 app.use('/api/data', requireAuth, dataRoutes)
 app.use('/api/preferences', requireAuth, preferenceRoutes)

@@ -32,6 +32,10 @@ export const profileSchema = z.object({
   avatar: z.string().max(200_000).regex(/^$|^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/).optional(),
 }).strict()
 
+export const adminRoleSchema = z.object({
+  role: z.enum(['user', 'admin']),
+}).strict()
+
 export const passwordSchema = z.object({
   currentPassword: z.string().min(1).max(128),
   newPassword: z.string().min(8).max(128),

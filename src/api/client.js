@@ -13,7 +13,7 @@ export const getApiToken = () => localStorage.getItem(API_TOKEN_KEY)
 export const setApiToken = (token) => localStorage.setItem(API_TOKEN_KEY, token)
 export const clearApiToken = () => localStorage.removeItem(API_TOKEN_KEY)
 
-export async function apiRequest(path, { method = 'GET', body, authenticated = true } = {}) {
+export async function apiRequest(path, { method = 'GET', body, authenticated = true, signal } = {}) {
   const headers = { Accept: 'application/json' }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const token = authenticated ? getApiToken() : null
@@ -25,6 +25,7 @@ export async function apiRequest(path, { method = 'GET', body, authenticated = t
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
     })
   } catch {
     throw new ApiError('Cannot reach the budget API. Make sure the backend is running on http://localhost:5000.', 0)

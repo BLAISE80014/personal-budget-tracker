@@ -3,6 +3,8 @@ import { APP_STORAGE_KEY, THEME_STORAGE_KEY, PREFERENCES_STORAGE_KEY, NOTIFICATI
 import { AppDataContext, NotificationsContext, PreferencesContext, ThemeContext } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
 
+const MIN_DATA_LOADING_DURATION = 3000
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem(THEME_STORAGE_KEY)
@@ -189,8 +191,24 @@ export function NotificationsProvider({ children }) {
 export function AppDataProvider({ children }) {
   const [data, setData] = useState(readData)
   const [sessionToken, setSessionToken] = useState(getApiToken)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(() => Boolean(getApiToken()))
   const [error, setError] = useState('')
+  const [dataError, setDataError] = useState('')
+  const [dataRequestId, setDataRequestId] = useState(0)
+
+  const updateSessionToken = useCallback((token) => {
+    setSessionToken(token)
+    setLoading(Boolean(token))
+    setDataError('')
+    setError('')
+  }, [])
+
+  const retryData = useCallback(() => {
+    setLoading(true)
+    setDataError('')
+    setError('')
+    setDataRequestId((current) => current + 1)
+  }, [])
 
   useEffect(() => {
     if (!sessionToken) {
@@ -198,25 +216,44 @@ export function AppDataProvider({ children }) {
       return
     }
     let active = true
-    setLoading(true)
-    apiRequest('/data')
+    const requestStartedAt = Date.now()
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 20000)
+    let minimumDurationTimer
+    apiRequest('/data', { signal: controller.signal })
       .then((remoteData) => {
         if (!active) return
         setData(remoteData)
+        setDataError('')
         setError('')
       })
       .catch((requestError) => {
         if (!active) return
-        setError(requestError.message)
+        const message = controller.signal.aborted
+          ? 'Loading your financial data took too long. Check your connection and try again.'
+          : requestError.message
+        setError(message)
+        setDataError(message)
         if (requestError.status === 401) {
           clearApiToken()
           localStorage.removeItem('budget-tracker-auth')
-          setSessionToken(null)
+          updateSessionToken(null)
         }
       })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [sessionToken])
+      .finally(() => {
+        window.clearTimeout(timeout)
+        if (active) {
+          const remainingDuration = Math.max(0, MIN_DATA_LOADING_DURATION - (Date.now() - requestStartedAt))
+          minimumDurationTimer = window.setTimeout(() => setLoading(false), remainingDuration)
+        }
+      })
+    return () => {
+      active = false
+      window.clearTimeout(timeout)
+      window.clearTimeout(minimumDurationTimer)
+      controller.abort()
+    }
+  }, [sessionToken, dataRequestId, updateSessionToken])
 
   useEffect(() => {
     if (!sessionToken) localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(data))
@@ -226,10 +263,12 @@ export function AppDataProvider({ children }) {
     data,
     setData,
     loading,
+    dataError,
     error,
     setApiError: setError,
     sessionToken,
-    setSessionToken,
-  }), [data, loading, error, sessionToken])
+    setSessionToken: updateSessionToken,
+    retryData,
+  }), [data, loading, dataError, error, sessionToken, updateSessionToken, retryData])
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>
 }

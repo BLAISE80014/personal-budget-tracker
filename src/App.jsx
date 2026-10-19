@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppDataProvider, NotificationsProvider, PreferencesProvider, ThemeProvider } from './providers.jsx'
-import { ProtectedRoute } from './components.jsx'
+import { AdminRoute, ProtectedRoute } from './components.jsx'
 import { AuthPage, BudgetsPage, CategoriesPage, DashboardPage, ExpensesPage, IncomePage, ReportsPage, SavingsPage } from './pages/TrackerPages.jsx'
 import { NotificationsPage, ProfilePage, SettingsPage } from './pages/SettingsPages.jsx'
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPages.jsx'
 import { HomePage } from './pages/HomePage.jsx'
+import { AdminDashboardPage } from './pages/AdminDashboardPage.jsx'
 import './App.css'
 
 function App() {
@@ -17,10 +18,13 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<AuthPage mode="login" />} />
+                <Route path="/admin/login" element={<AuthPage mode="login" adminLogin />} />
                 <Route path="/register" element={<AuthPage mode="register" />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+                <Route path="/admin/dashboard/:section" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
                 <Route path="/income" element={<ProtectedRoute><IncomePage /></ProtectedRoute>} />
                 <Route path="/expenses" element={<ProtectedRoute><ExpensesPage /></ProtectedRoute>} />
                 <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />

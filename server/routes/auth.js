@@ -14,6 +14,7 @@ const publicUser = (user) => ({
   id: String(user._id),
   fullName: user.fullName,
   email: user.email,
+  role: user.role || 'user',
   phone: user.phone || '',
   avatar: user.avatar || '',
   memberSince: user.createdAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
@@ -140,6 +141,7 @@ router.post('/register', async (req, res) => {
   const user = await User.create({
     fullName: input.fullName,
     email,
+    role: 'user',
     passwordHash: await bcrypt.hash(input.password, 12),
   })
   try {
@@ -164,11 +166,17 @@ router.post('/register', async (req, res) => {
   res.status(201).json({ success: true, data: { token: issueToken(user), user: publicUser(user) } })
 })
 
-router.post('/login', async (req, res) => {
+async function authenticate(req, res, { adminOnly }) {
   const input = validate(loginSchema, req.body)
   const user = await User.findOne({ email: input.email.toLowerCase() }).select('+passwordHash')
   const matches = user ? await bcrypt.compare(input.password, user.passwordHash) : false
   if (!matches) return res.status(401).json({ success: false, error: { message: 'Email or password is incorrect.' } })
+  if (adminOnly && user.role !== 'admin') {
+    return res.status(403).json({ success: false, error: { message: 'This account does not have administrator access.' } })
+  }
+  if (!adminOnly && user.role === 'admin') {
+    return res.status(403).json({ success: false, error: { message: 'Use administrator sign-in at /admin/login.' } })
+  }
   await Notification.create({
     id: `${Date.now()}-login`,
     userId: user._id,
@@ -179,7 +187,10 @@ router.post('/login', async (req, res) => {
     read: false,
   })
   res.json({ success: true, data: { token: issueToken(user), user: publicUser(user) } })
-})
+}
+
+router.post('/login', (req, res) => authenticate(req, res, { adminOnly: false }))
+router.post('/admin/login', (req, res) => authenticate(req, res, { adminOnly: true }))
 
 router.get('/me', requireAuth, (req, res) => {
   res.json({ success: true, data: { user: publicUser(req.user) } })

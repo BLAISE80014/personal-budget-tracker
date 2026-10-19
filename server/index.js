@@ -3,6 +3,7 @@ import app from './app.js'
 import { connectDatabase } from './config/db.js'
 import User from './models/User.js'
 import { trackerCollections } from './models/TrackerRecords.js'
+import { migrateMissingUserRoles } from './utils/admin-provisioning.js'
 
 const port = Number(process.env.PORT || 5000)
 
@@ -38,6 +39,7 @@ async function removeObsoleteTrackerIndexes() {
 async function start() {
   try {
     await connectDatabase(process.env.MONGODB_URI)
+    await migrateMissingUserRoles()
     await User.collection.createIndex({ passwordResetTokenHash: 1 })
     await removeObsoleteTrackerIndexes()
 

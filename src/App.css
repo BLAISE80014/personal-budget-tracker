@@ -2288,6 +2288,30 @@ html {
   color: var(--primary);
 }
 
+.home-footer-auth-action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  transition: color 160ms ease;
+}
+
+.home-footer-auth-action:hover {
+  color: var(--primary);
+}
+
+.role-route-notice {
+  width: min(100% - 40px, 1100px);
+  margin: 16px auto 0;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--text);
+  font-size: 0.84rem;
+}
+
 .home-footer-bottom {
   grid-column: 1 / -1;
   display: flex;
@@ -4155,6 +4179,107 @@ html.dark .home-shell .feature-card + .feature-card {
   white-space: nowrap;
 }
 
+.dashboard-quick-actions {
+  margin-bottom: 18px;
+}
+
+.dashboard-quick-actions-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dashboard-quick-actions-heading h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.dashboard-quick-actions-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.dashboard-quick-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-quick-action {
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--dashboard-card-radius);
+  background: var(--panel-bg);
+  box-shadow: var(--card-shadow);
+  color: var(--muted);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-quick-action:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  box-shadow: 0 12px 26px var(--shadow);
+}
+
+.dashboard-quick-action:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.dashboard-quick-action-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.dashboard-quick-action-icon.expense {
+  background: var(--soft-gold);
+  color: #c78527;
+}
+
+.dashboard-quick-action-icon.budget,
+.dashboard-quick-action-icon.savings {
+  background: var(--soft-green);
+  color: var(--success);
+}
+
+.dashboard-quick-action > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  flex: 1;
+}
+
+.dashboard-quick-action strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-quick-action small {
+  overflow: hidden;
+  font-size: 0.69rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dashboard-main-grid,
 .dashboard-bottom-grid {
   display: grid;
@@ -4605,6 +4730,41 @@ html.dark .home-shell .feature-card + .feature-card {
     margin-bottom: 12px;
   }
 
+  .dashboard-quick-actions {
+    margin-bottom: 12px;
+  }
+
+  .dashboard-quick-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .dashboard-quick-action {
+    min-height: 68px;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .dashboard-quick-action-icon {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .dashboard-quick-action > svg {
+    width: 14px;
+    flex: 0 0 14px;
+  }
+
+  .dashboard-quick-actions-heading {
+    display: block;
+  }
+
+  .dashboard-quick-actions-heading p {
+    margin-top: 3px;
+    font-size: 0.68rem;
+  }
+
   .dashboard-summary-card {
     min-height: 139px;
     padding: 12px;
@@ -4774,8 +4934,13 @@ html.dark .home-shell .feature-card + .feature-card {
   animation: budget-loader-rotate 1.8s linear infinite;
 }
 
-.budget-loader-icon {
-  animation: budget-loader-pulse 2.4s ease-in-out infinite;
+.budget-loader-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: budget-loader-rotate 900ms linear infinite;
 }
 
 @keyframes budget-loader-fade-in {
@@ -4795,16 +4960,10 @@ html.dark .home-shell .feature-card + .feature-card {
   }
 }
 
-@keyframes budget-loader-pulse {
-  50% {
-    transform: scale(1.04);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .budget-loader-content,
   .budget-loader-ring,
-  .budget-loader-icon {
+  .budget-loader-spinner {
     animation: none;
   }
 }

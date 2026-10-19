@@ -8,6 +8,10 @@
     "server": "node server/index.js",
     "server:dev": "node --watch server/index.js",
     "db:migrate-finance-data": "node server/scripts/migrate-finance-data.js",
+    "admin:setup": "node server/scripts/setup-admin.js",
+    "admin:migrate": "node server/scripts/migrate-admin.js",
+    "admin:password": "node server/scripts/reset-admin-password.js",
+    "test": "node --test",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

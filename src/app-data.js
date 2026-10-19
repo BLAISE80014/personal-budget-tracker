@@ -157,15 +157,20 @@ export const toInputDate = (value) => {
   return Number.isNaN(parsed.getTime()) ? todayInputDate() : `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
 }
 export const belongsToMonth = (value, month) => {
-  const parsed = new Date(value)
+  const parsed = parseLocalDate(value)
   return !Number.isNaN(parsed.getTime()) && `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}` === month
 }
 export const hashPassword = async (password) => {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password))
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
+export const parseLocalDate = (value) => (
+  typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value)
+)
 export const formatDate = (value) => {
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value)
+  const date = parseLocalDate(value)
   if (Number.isNaN(date.getTime())) return value
   const preferences = readPreferences()
   const locale = localeForLanguage(preferences.language)
@@ -237,7 +242,7 @@ export const getMonthlyTotals = (income, expenses) => {
     ...income.map((entry) => ({ date: entry.date, income: Number(entry.amount), expenses: 0 })),
     ...expenses.map((entry) => ({ date: entry.date, income: 0, expenses: Number(entry.amount) })),
   ]
-    .map((entry) => ({ ...entry, parsedDate: new Date(entry.date) }))
+    .map((entry) => ({ ...entry, parsedDate: parseLocalDate(entry.date) }))
     .filter((entry) => !Number.isNaN(entry.parsedDate.getTime()))
   const latest = entries.reduce((date, entry) => entry.parsedDate > date ? entry.parsedDate : date, new Date(0))
   const months = Array.from({ length: 6 }, (_, index) => {

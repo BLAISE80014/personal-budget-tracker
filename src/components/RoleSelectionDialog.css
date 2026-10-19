@@ -1,0 +1,218 @@
+.role-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px;
+  background: rgba(12, 20, 43, 0.56);
+  backdrop-filter: blur(5px);
+}
+
+.role-dialog {
+  position: relative;
+  width: min(100%, 520px);
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--panel-bg);
+  box-shadow: 0 24px 80px rgba(8, 16, 40, 0.25);
+  color: var(--text);
+}
+
+.role-dialog-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  color: var(--muted);
+}
+
+.role-dialog-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.role-dialog-heading {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.role-dialog-brand,
+.role-dialog-heading-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  box-shadow: 0 10px 22px rgba(87, 95, 232, 0.2);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.role-dialog-heading-icon.admin {
+  background: var(--soft-purple);
+  color: var(--primary);
+  box-shadow: none;
+}
+
+.role-dialog-heading h2 {
+  max-width: 400px;
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.55rem);
+  letter-spacing: -0.035em;
+}
+
+.role-dialog-heading p {
+  max-width: 390px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.role-choice-list {
+  display: grid;
+  gap: 12px;
+  margin: 26px 0 22px;
+}
+
+.role-choice {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--panel-bg);
+  color: var(--text);
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.role-choice:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+  background: var(--panel-alt);
+}
+
+.role-choice.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.role-choice:focus-visible,
+.role-dialog button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.role-choice-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.role-choice-icon.user {
+  background: var(--soft-blue);
+  color: var(--primary);
+}
+
+.role-choice-icon.admin {
+  background: var(--soft-purple);
+  color: var(--primary);
+}
+
+.role-choice-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.role-choice-copy strong {
+  font-size: 0.92rem;
+}
+
+.role-choice-copy small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.role-choice-indicator {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+}
+
+.role-choice.selected .role-choice-indicator {
+  border: 5px solid var(--primary);
+  background: var(--panel-bg);
+}
+
+.role-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.role-dialog-actions button,
+.role-dialog-continue {
+  min-height: 42px;
+}
+
+.role-dialog-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.role-dialog-continue {
+  width: 100%;
+  margin-top: 24px;
+}
+
+@media (max-width: 520px) {
+  .role-dialog-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .role-dialog {
+    padding: 25px 18px 18px;
+    border-radius: 18px;
+  }
+
+  .role-dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .role-dialog-actions button {
+    width: 100%;
+  }
+}

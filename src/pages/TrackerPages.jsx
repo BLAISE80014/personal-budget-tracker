@@ -18,17 +18,17 @@ import {
   Wallet
 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, money, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
+import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGradient, expenseColors, formatDate, getExpenseBreakdown, getMonthlyTotals, goalIcons, money, parseLocalDate, percentageChange, todayInputDate, toInputDate } from '../app-data.js'
 import { useAppData, useNotifications } from '../contexts.js'
 import { AppLayout, DataModal, PublicHeader, SummaryCard } from '../components.jsx'
 import { apiRequest, setApiToken } from '../api/client.js'
 
-export function AuthPage({ mode }) {
+export function AuthPage({ mode, adminLogin = false }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { setData, setSessionToken } = useAppData()
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState(location.state?.notice || '')
+  const [notice, setNotice] = useState(() => location.state?.notice || '')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     fullName: '',
@@ -67,7 +67,12 @@ export function AuthPage({ mode }) {
         setError('Enter your full name.')
         return
       }
-      const result = await apiRequest(isRegister ? '/auth/register' : '/auth/login', {
+      const authPath = isRegister
+        ? '/auth/register'
+        : adminLogin
+          ? '/auth/admin/login'
+          : '/auth/login'
+      const result = await apiRequest(authPath, {
         method: 'POST',
         authenticated: false,
         body: isRegister
@@ -78,7 +83,7 @@ export function AuthPage({ mode }) {
       localStorage.setItem(AUTH_STORAGE_KEY, result.user.email)
       setSessionToken(result.token)
       setData((current) => ({ ...current, user: result.user }))
-      navigate('/dashboard')
+      navigate(adminLogin ? '/admin/dashboard' : '/dashboard')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -113,8 +118,8 @@ export function AuthPage({ mode }) {
         </div>
 
         <form className="auth-card" onSubmit={onSubmit}>
-          <h1>{isRegister ? 'Create Account' : 'Welcome Back'}</h1>
-          <p>{isRegister ? 'Register a new account' : 'Login to your account'}</p>
+          <h1>{isRegister ? 'Create Account' : adminLogin ? 'Administrator Sign In' : 'Welcome Back'}</h1>
+          <p>{isRegister ? 'Register a new account' : adminLogin ? 'Sign in to manage administrator settings' : 'Login to your account'}</p>
 
           {isRegister && (
             <label>
@@ -156,9 +161,13 @@ export function AuthPage({ mode }) {
           </button>
 
           <div className="auth-switch">
-            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <Link to={isRegister ? '/login' : '/register'}>{isRegister ? 'Login' : 'Register'}</Link>
+            {isRegister
+              ? <>Already have an account? <Link to="/login">Login</Link></>
+              : adminLogin
+                ? <>Not an administrator? <Link to="/login">User sign in</Link></>
+                : <>Don't have an account? <Link to="/register">Register</Link></>}
           </div>
+          {!isRegister && !adminLogin && <div className="auth-switch"><Link to="/admin/login">Administrator sign in</Link></div>}
         </form>
       </main>
     </div>
@@ -203,6 +212,35 @@ export function DashboardPage() {
           <DashboardSummaryCard icon={TrendingUp} label="Total Income" value={compactMoney(totalIncome)} detail="Compared to last month" trend={percentageChange(latestMonth.income, previousMonth.income)} positive />
           <DashboardSummaryCard icon={CreditCard} label="Total Expenses" value={compactMoney(totalExpenses)} detail="Across all categories" trend={percentageChange(latestMonth.expenses, previousMonth.expenses)} positive={latestMonth.expenses <= previousMonth.expenses} />
           <DashboardSummaryCard icon={PiggyBank} label="Savings" value={compactMoney(totalSavings)} detail="Saved toward your goals" trend={`${data.savings.length} active goals`} positive />
+        </section>
+
+        <section className="dashboard-quick-actions" aria-labelledby="dashboard-quick-actions-title">
+          <div className="dashboard-quick-actions-heading">
+            <h2 id="dashboard-quick-actions-title">Quick Actions</h2>
+            <p>Manage your finances in a few clicks.</p>
+          </div>
+          <div className="dashboard-quick-action-grid">
+            <Link to="/income" className="dashboard-quick-action">
+              <span className="dashboard-quick-action-icon income"><TrendingUp size={18} /></span>
+              <span><strong>Add income</strong><small>Record money received</small></span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to="/expenses" className="dashboard-quick-action">
+              <span className="dashboard-quick-action-icon expense"><CreditCard size={18} /></span>
+              <span><strong>Add expense</strong><small>Track a purchase</small></span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to="/budgets" className="dashboard-quick-action">
+              <span className="dashboard-quick-action-icon budget"><PiggyBank size={18} /></span>
+              <span><strong>Set a budget</strong><small>Plan your spending</small></span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to="/savings" className="dashboard-quick-action">
+              <span className="dashboard-quick-action-icon savings"><Target size={18} /></span>
+              <span><strong>Add savings goal</strong><small>Track your progress</small></span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
         </section>
 
         <section className="dashboard-main-grid">
@@ -975,10 +1013,10 @@ export function SavingsPage() {
 export function ReportsPage() {
   const { data } = useAppData()
   const [period, setPeriod] = useState('Monthly')
-  const [month, setMonth] = useState('2024-05')
+  const [month, setMonth] = useState(() => todayInputDate().slice(0, 7))
 
   const inMonth = (date) => {
-    const parsed = new Date(date)
+    const parsed = parseLocalDate(date)
     if (Number.isNaN(parsed.getTime())) return false
     if (period === 'Yearly') return String(parsed.getFullYear()) === month.slice(0, 4)
     return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}` === month

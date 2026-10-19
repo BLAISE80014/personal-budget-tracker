@@ -15,7 +15,7 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ success: false, error: { message: 'The access token is invalid.' } })
     }
 
-    const user = await User.findById(payload.sub).select('_id fullName email phone avatar createdAt tokenVersion')
+    const user = await User.findById(payload.sub).select('_id fullName email phone avatar role createdAt tokenVersion')
     if (!user) return res.status(401).json({ success: false, error: { message: 'The account no longer exists.' } })
     if (Number(payload.tokenVersion || 0) !== user.tokenVersion) {
       return res.status(401).json({ success: false, error: { message: 'Your session is invalid or expired. Please sign in again.' } })

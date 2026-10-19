@@ -1,28 +1,39 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  BarChart3,
   Bell,
   BellRing,
+  ChevronDown,
   ChevronRight,
   CreditCard,
+  FileText,
+  LayoutDashboard,
   Landmark,
   LogOut,
+  Menu,
   Moon,
   Monitor,
   PackageOpen,
   PiggyBank,
+  ReceiptText,
   Search,
   Settings,
+  Shield,
+  ShieldCheck,
   Sun,
+  Tags,
   Target,
   TrendingDown,
   TrendingUp,
   UserRound,
+  Users,
   Wallet
 } from 'lucide-react'
-import { Link, Navigate, NavLink, useNavigate } from 'react-router-dom'
+import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AUTH_STORAGE_KEY, initials, money, navItems, profileAvatarOptions, settingSections } from './app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
+import LoadingScreen from './components/LoadingScreen.jsx'
 
 export function DataModal({ title, form, setForm, fields, onClose, onSave, submitLabel = 'Save', isSaving = false }) {
   const changeField = (event) => {
@@ -98,7 +109,7 @@ export function ThemeToggle() {
   )
 }
 
-export function PublicHeader({ minimal = false }) {
+export function PublicHeader({ minimal = false, onAuthAction }) {
   return (
     <header className="public-header">
       <Link to="/" className="brand-wrap" aria-label="Personal Budget Tracker home">
@@ -118,8 +129,17 @@ export function PublicHeader({ minimal = false }) {
       <div className="header-actions">
         <ThemeToggle />
         {!minimal && <>
-          <Link className="nav-button ghost" to="/login">Login</Link>
-          <Link className="nav-button primary" to="/register">Register</Link>
+          {onAuthAction ? (
+            <>
+              <button type="button" className="nav-button ghost" onClick={() => onAuthAction('login')}>Login</button>
+              <button type="button" className="nav-button primary" onClick={() => onAuthAction('register')}>Register</button>
+            </>
+          ) : (
+            <>
+              <Link className="nav-button ghost" to="/login">Login</Link>
+              <Link className="nav-button primary" to="/register">Register</Link>
+            </>
+          )}
         </>}
       </div>
     </header>
@@ -351,9 +371,10 @@ export function DashboardHeader() {
 
 export function AppLayout({ children }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { error, setSessionToken } = useAppData()
   const { error: preferencesError } = usePreferences()
-  const location = window.location.pathname
+  const pathname = window.location.pathname
 
   return (
     <div className="app-shell">
@@ -370,7 +391,7 @@ export function AppLayout({ children }) {
               to={path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={(event) => {
-                if (location === path) event.preventDefault()
+                if (pathname === path) event.preventDefault()
               }}
             >
               <Icon size={15} />
@@ -387,6 +408,7 @@ export function AppLayout({ children }) {
 
       <div className="content-panel">
         <DashboardHeader />
+        {location.state?.notice && <div className="role-route-notice" role="status">{location.state.notice}</div>}
         {(error || preferencesError) && <div className="api-error-banner" role="alert">{error || preferencesError}</div>}
         {children}
       </div>
@@ -394,11 +416,165 @@ export function AppLayout({ children }) {
   )
 }
 
+const adminNavigation = [
+  { path: '', label: 'Dashboard', icon: LayoutDashboard },
+  { path: 'users', label: 'Users', icon: Users },
+  { path: 'transactions', label: 'Transactions', icon: ReceiptText },
+  { path: 'income', label: 'Income', icon: TrendingUp },
+  { path: 'expenses', label: 'Expenses', icon: TrendingDown },
+  { path: 'categories', label: 'Categories', icon: Tags },
+  { path: 'budgets', label: 'Budgets', icon: Wallet },
+  { path: 'savings', label: 'Savings goals', icon: Target },
+  { path: 'reports', label: 'Reports & analytics', icon: BarChart3 },
+  { path: 'notifications', label: 'Notifications', icon: Bell },
+  { path: 'activity', label: 'Audit logs', icon: FileText },
+  { path: 'settings', label: 'Settings', icon: Settings },
+]
+
+export function AdminLayout({ children }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { data, setSessionToken } = useAppData()
+  const [search, setSearch] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notificationError, setNotificationError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    const loadNotifications = () => {
+      apiRequest('/admin/notifications?limit=5')
+        .then((result) => {
+          if (!active) return
+          setUnreadCount(result.unread)
+          setNotificationError('')
+        })
+        .catch((requestError) => {
+          if (active) setNotificationError(requestError.message)
+        })
+    }
+    loadNotifications()
+    window.addEventListener('admin-notifications-updated', loadNotifications)
+    return () => {
+      active = false
+      window.removeEventListener('admin-notifications-updated', loadNotifications)
+    }
+  }, [location.pathname])
+
+  const logout = () => {
+    clearApiToken()
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+    setSessionToken(null)
+    navigate('/admin/login')
+  }
+  const submitSearch = (event) => {
+    event.preventDefault()
+    const usersPage = location.pathname.endsWith('/users')
+    const destination = usersPage ? 'users' : 'transactions'
+    const params = new URLSearchParams()
+    if (search.trim()) params.set('search', search.trim())
+    navigate(`/admin/dashboard/${destination}${params.size ? `?${params}` : ''}`)
+    setMenuOpen(false)
+  }
+
+  return (
+    <div className="admin-shell">
+      {menuOpen && <button type="button" className="admin-mobile-backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />}
+      <aside className={`admin-sidebar ${menuOpen ? 'open' : ''}`}>
+        <Link to="/admin/dashboard" className="admin-brand" onClick={() => setMenuOpen(false)}>
+          <span className="admin-brand-mark"><ShieldCheck size={19} /></span>
+          <span><strong>Personal Budget Tracker</strong><small>Administration</small></span>
+        </Link>
+        <div className="admin-nav-caption">WORKSPACE</div>
+        <nav className="admin-nav" aria-label="Administrator navigation">
+          {adminNavigation.map(({ path, label, icon: Icon }) => (
+            <NavLink
+              key={path || 'overview'}
+              to={path ? `/admin/dashboard/${path}` : '/admin/dashboard'}
+              end={!path}
+              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              <Icon size={17} />
+              <span>{label}</span>
+              {path === 'notifications' && unreadCount > 0 && <i>{unreadCount}</i>}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="admin-sidebar-bottom">
+          <Link className="admin-nav-link" to="/"><Shield size={17} /><span>Back to app</span></Link>
+          <button type="button" className="admin-nav-link admin-logout-link" onClick={logout}><LogOut size={17} /><span>Sign out</span></button>
+          <div className="admin-sidebar-user">
+            <ProfileAvatar avatar={data.user.avatar} name={data.user.fullName} />
+            <span><strong>{data.user.fullName}</strong><small>Administrator</small></span>
+          </div>
+        </div>
+      </aside>
+      <div className="admin-main-column">
+        <header className="admin-topbar">
+          <button type="button" className="admin-menu-toggle" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
+          <form className="admin-global-search" role="search" onSubmit={submitSearch}>
+            <Search size={17} />
+            <input aria-label="Search users or records" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users, records..." />
+            <kbd>Enter</kbd>
+          </form>
+          <div className="admin-topbar-actions">
+            <span className="admin-current-date">{new Intl.DateTimeFormat(undefined, { dateStyle: 'full' }).format(new Date())}</span>
+            <Link className="admin-icon-button" to="/admin/dashboard/notifications" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}>
+              <Bell size={18} />
+              {unreadCount > 0 && <i>{unreadCount > 9 ? '9+' : unreadCount}</i>}
+            </Link>
+            <ThemeToggle />
+            <div className="admin-profile-menu-wrap">
+              <button type="button" className="admin-profile-button" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
+                <ProfileAvatar avatar={data.user.avatar} name={data.user.fullName} />
+                <span><strong>{data.user.fullName}</strong><small>Administrator</small></span>
+                <ChevronDown size={15} />
+              </button>
+              {profileOpen && <div className="admin-profile-menu">
+                <Link to="/admin/dashboard/settings" onClick={() => setProfileOpen(false)}><Settings size={15} /> Admin settings</Link>
+                <Link to="/admin/dashboard/settings" onClick={() => setProfileOpen(false)}><UserRound size={15} /> Profile details</Link>
+                <button type="button" onClick={logout}><LogOut size={15} /> Sign out</button>
+              </div>}
+            </div>
+          </div>
+        </header>
+        {location.state?.notice && <div className="role-route-notice" role="status">{location.state.notice}</div>}
+        {notificationError && <div className="admin-layout-alert" role="alert">{notificationError}</div>}
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export function ProtectedRoute({ children }) {
+  const { loading, dataError, retryData, data } = useAppData()
   const isLoggedIn = Boolean(localStorage.getItem(AUTH_STORAGE_KEY)) && Boolean(getApiToken())
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />
+  }
+
+  if (loading || dataError) {
+    return <LoadingScreen error={dataError} onRetry={retryData} />
+  }
+
+  if (data.user?.role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace state={{ notice: 'You are signed in as an administrator.' }} />
+  }
+
+  return children
+}
+
+export function AdminRoute({ children }) {
+  const { loading, dataError, retryData, data } = useAppData()
+  const isLoggedIn = Boolean(localStorage.getItem(AUTH_STORAGE_KEY)) && Boolean(getApiToken())
+
+  if (!isLoggedIn) return <Navigate to="/admin/login" replace />
+  if (loading || dataError) return <LoadingScreen error={dataError} onRetry={retryData} />
+  if (data.user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace state={{ notice: 'Your account does not have administrator access.' }} />
   }
 
   return children
