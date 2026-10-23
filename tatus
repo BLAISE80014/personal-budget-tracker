@@ -1,0 +1,13 @@
+[1mdiff --git a/vercel.json b/vercel.json[m
+[1mindex 9cf47c7..7758ed7 100644[m
+[1m--- a/vercel.json[m
+[1m+++ b/vercel.json[m
+[36m@@ -2,7 +2,7 @@[m
+ {[m
+   "rewrites": [[m
+     {[m
+[31m-      "source": "/((?!api(?:/|$)).*)",[m
+[32m+[m[32m      "source": "/(.*)",[m
+       "destination": "/index.html"[m
+     }[m
+   ][m
