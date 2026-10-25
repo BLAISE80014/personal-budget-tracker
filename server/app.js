@@ -1,3 +1,4 @@
+
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -14,34 +15,55 @@ import resourceRoutes from './routes/resources.js'
 import { requireAdmin } from './middleware/require-admin.js'
 
 const app = express()
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5174,http://localhost:5173')
+
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean)
+
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push(
+    'http://localhost:5173',
+    'http://localhost:5174',
+  )
+}
 
 app.disable('x-powered-by')
 app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false)
+
 app.use(helmet())
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
-    callback(new Error('This origin is not allowed by the CORS policy.'))
+    if (!origin || allowedOrigins.includes(origin.replace(/\/+$/, ''))) {
+      return callback(null, true)
+    }
+
+    console.warn(`Blocked CORS origin: ${origin}`)
+    return callback(null, false)
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   maxAge: 600,
 }))
+
 app.use(express.json({ limit: '256kb', strict: true }))
 app.use(express.urlencoded({ extended: false, limit: '32kb' }))
-
-app.get('/api/health', (_req, res) => {
-  res.json({ success: true, data: { status: 'ok', database: 'connected', timestamp: new Date().toISOString() } })
-})
 
 app.get('/', (_req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Personal Budget Tracker API is running'
+    message: 'Personal Budget Tracker API is running',
+  })
+})
+
+app.get('/api/health', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    },
   })
 })
 
@@ -50,15 +72,27 @@ const authLimiter = rateLimit({
   limit: 20,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
-  message: { success: false, error: { message: 'Too many authentication attempts. Try again in 15 minutes.' } },
+  message: {
+    success: false,
+    error: {
+      message: 'Too many authentication attempts. Try again in 15 minutes.',
+    },
+  },
 })
+
 const passwordResetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
-  message: { success: false, error: { message: 'Too many password reset attempts. Try again in 15 minutes.' } },
+  message: {
+    success: false,
+    error: {
+      message: 'Too many password reset attempts. Try again in 15 minutes.',
+    },
+  },
 })
+
 app.use('/api/auth/forgot-password', passwordResetLimiter)
 app.use('/api/auth/reset-password', passwordResetLimiter)
 app.use('/api/auth', authLimiter, authRoutes)
