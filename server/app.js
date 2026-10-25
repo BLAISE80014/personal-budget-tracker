@@ -38,6 +38,13 @@ app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', database: 'connected', timestamp: new Date().toISOString() } })
 })
 
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Personal Budget Tracker API is running'
+  })
+})
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
