@@ -1,5 +1,7 @@
 const API_TOKEN_KEY = 'budget-tracker-api-token'
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const API_BASE_URL = (import.meta.env.VITE_API_URL
+  || (import.meta.env.PROD ? 'https://personal-budget-tracker-api.onrender.com/api' : '/api'))
+  .replace(/\/+$/, '')
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -27,8 +29,12 @@ export async function apiRequest(path, { method = 'GET', body, authenticated = t
       body: body === undefined ? undefined : JSON.stringify(body),
       signal,
     })
-  } catch {
-    throw new ApiError('Cannot reach the budget API. Make sure the backend is running on http://localhost:5000.', 0)
+  } catch (error) {
+    if (error.name === 'AbortError') throw error
+    throw new ApiError(
+      `Cannot reach the budget API at ${API_BASE_URL}. Check that the API is running and allows requests from this website.`,
+      0,
+    )
   }
 
   let payload
@@ -37,7 +43,7 @@ export async function apiRequest(path, { method = 'GET', body, authenticated = t
   } catch {
     const contentType = response.headers.get('content-type') || 'unknown content type'
     throw new ApiError(
-      `The budget API returned a non-JSON response (HTTP ${response.status}, ${contentType}). Make sure the backend is running on http://localhost:5000 and its environment and MongoDB are configured.`,
+      `The budget API at ${API_BASE_URL} returned a non-JSON response (HTTP ${response.status}, ${contentType}). Check that the API is running and its environment and database are configured.`,
       response.status,
     )
   }
