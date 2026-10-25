@@ -1,5 +1,56 @@
 # React + Vite
 
+## Production deployment
+
+This repository uses a separate frontend and API deployment:
+
+- **Frontend:** Vercel (Vite static site)
+- **API:** Render web service (Express, configured by [`render.yaml`](./render.yaml))
+- **Database:** MongoDB Atlas
+
+### 1. Deploy the frontend to Vercel
+
+Import this GitHub repository into Vercel. Use the repository root as the project root, `npm run build` as the build command, and `dist` as the output directory. The Vercel project uses `vercel.json` to route client-side paths to the React app.
+
+The API URL is not known until the Render service is created. After that, add this Vercel environment variable and redeploy:
+
+```text
+VITE_API_URL=https://<your-render-service>.onrender.com/api
+```
+
+Do not include a trailing slash after `/api`.
+
+### 2. Prepare MongoDB Atlas
+
+Create a production database and database user in Atlas. Copy its application connection string, using `personal-budget-tracker` as the database name. Store the complete URI only as the Render `MONGODB_URI` secret; do not commit it or put it in the Vite environment.
+
+Allow network access from the Render service using the outbound IP addresses available for your Render plan. If you choose Atlas's broad `0.0.0.0/0` network rule, understand that it permits connection attempts from any IP and rely on a strong, unique database password and TLS; prefer restricted access when your Render plan supports it.
+
+### 3. Deploy the API to Render
+
+In Render, create a Blueprint deployment from this repository and select `render.yaml`. Set the prompted environment values:
+
+- `MONGODB_URI`: Atlas connection string for the production database.
+- `CORS_ORIGINS`: exact Vercel site origin, for example `https://your-project.vercel.app` (origins only; no path or trailing slash). Comma-separate additional trusted origins if needed.
+- `FRONTEND_URL`: exact Vercel site origin, used to build password-reset links.
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`: production SMTP credentials and sender identity for password-reset emails.
+
+Render generates `JWT_SECRET` automatically. Keep all secrets in Render's environment settings. The API listens on Render's provided `PORT`; the health check is `/api/health`.
+
+### 4. Connect and verify
+
+After the API deploys, set `VITE_API_URL` in Vercel to the Render service URL ending in `/api`, then redeploy the frontend. Open `https://<your-render-service>.onrender.com/api/health`; it should report `"status":"ok"` and `"database":"connected"`. Verify registration/login, data persistence, and password reset from the deployed Vercel site.
+
+The local `.env` is for development only and must never be uploaded to Vercel or committed. Production and local databases should remain separate.
+
+### Deployment notes
+
+- The free Render web-service plan may sleep when idle, so the first API request after inactivity can take longer.
+- Update `CORS_ORIGINS` and `FRONTEND_URL` if the Vercel production domain changes.
+- Vercel preview domains are not trusted automatically; add only the specific preview origins you intend to use.
+
+## Development
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
