@@ -1,6 +1,6 @@
 const API_TOKEN_KEY = 'budget-tracker-api-token'
 const API_BASE_URL = (import.meta.env.VITE_API_URL
-  || (import.meta.env.PROD ? 'https://personal-budget-tracker-api.onrender.com/api' : '/api'))
+  || (import.meta.env.PROD ? 'https://personal-budget-tracker-api-e8ie.onrender.com/api' : '/api'))
   .replace(/\/+$/, '')
 
 export class ApiError extends Error {

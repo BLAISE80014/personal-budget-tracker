@@ -57,6 +57,14 @@ app.get('/', (_req, res) => {
   })
 })
 
+app.get('/api', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'Personal Budget Tracker API',
+    health: '/api/health',
+  })
+})
+
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
@@ -101,7 +109,7 @@ app.use('/api/dashboard', requireAuth, dashboardRoutes)
 app.use('/api/data', requireAuth, dataRoutes)
 app.use('/api/preferences', requireAuth, preferenceRoutes)
 app.use('/api/notifications', requireAuth, notificationRoutes)
-app.use('/api', requireAuth, resourceRoutes)
+app.use('/api', resourceRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

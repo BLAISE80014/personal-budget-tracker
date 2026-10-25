@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
+import { requireAuth } from '../middleware/auth.js'
 import { Budget, Expense, trackerRecordModels } from '../models/TrackerRecords.js'
 import { resourceSchemas, validate } from '../utils/validation.js'
 
@@ -21,13 +22,13 @@ function serialize(record) {
   return item
 }
 
-router.get('/:resource', async (req, res) => {
+router.get('/:resource', requireAuth, async (req, res) => {
   const Model = trackerRecordModels[req.resource]
   const records = await Model.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean()
   res.json({ success: true, data: { items: records.map(serialize) } })
 })
 
-router.post('/:resource', async (req, res) => {
+router.post('/:resource', requireAuth, async (req, res) => {
   const record = validate(resourceSchemas[req.resource], req.body)
   record.id ||= randomUUID()
   const Model = trackerRecordModels[req.resource]
@@ -59,10 +60,10 @@ async function updateRecord(req, res) {
   res.json({ success: true, data: { item: serialize(previous) } })
 }
 
-router.put('/:resource/:id', updateRecord)
-router.patch('/:resource/:id', updateRecord)
+router.put('/:resource/:id', requireAuth, updateRecord)
+router.patch('/:resource/:id', requireAuth, updateRecord)
 
-router.delete('/:resource/:id', async (req, res) => {
+router.delete('/:resource/:id', requireAuth, async (req, res) => {
   const Model = trackerRecordModels[req.resource]
   const deleted = await Model.findOneAndDelete({ userId: req.user._id, id: req.params.id })
   if (!deleted) return res.status(404).json({ success: false, error: { message: 'Record not found.' } })
