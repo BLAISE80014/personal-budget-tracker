@@ -21,6 +21,7 @@ if (!testUri) {
   const AdminActivity = (await import('../models/AdminActivity.js')).default
   const AdminNotification = (await import('../models/AdminNotification.js')).default
   const AdminProvisioning = (await import('../models/AdminProvisioning.js')).default
+  const Task = (await import('../models/Task.js')).default
   const { trackerRecordModels } = await import('../models/TrackerRecords.js')
   const { migrateMissingUserRoles, provisionInitialAdmin } = await import('../utils/admin-provisioning.js')
   const emails = []
@@ -88,6 +89,7 @@ if (!testUri) {
         AdminActivity.deleteMany({ $or: [{ actorId: { $in: userIds } }, { targetUserId: { $in: userIds } }] }),
         AdminNotification.deleteMany({ recipientId: { $in: userIds } }),
         AdminProvisioning.deleteMany({ userId: { $in: userIds } }),
+        Task.deleteMany({ userId: { $in: userIds } }),
         User.deleteMany({ _id: { $in: userIds } }),
       ])
       await mongoose.disconnect()
@@ -131,6 +133,82 @@ if (!testUri) {
     assert.equal(updated.passwordHash, account.passwordHash)
     assert.equal(updated.fullName, account.user.fullName)
     assert.equal(updated.phone, account.user.phone)
+  })
+
+  test('tasks support authenticated CRUD and enforce per-user ownership', async () => {
+    const owner = await createAccount()
+    const other = await createAccount()
+    const ownerSession = await login(owner.email, owner.password)
+    const otherSession = await login(other.email, other.password)
+
+    assert.equal((await request('/api/tasks')).status, 401)
+
+    const spoofedOwner = await request('/api/tasks', {
+      method: 'POST',
+      token: ownerSession.token,
+      body: { title: 'Spoofed', userId: other.user._id },
+    })
+    assert.equal(spoofedOwner.status, 400)
+
+    const invalidDates = await request('/api/tasks', {
+      method: 'POST',
+      token: ownerSession.token,
+      body: { title: 'Invalid date', dueDate: '2026-02-31' },
+    })
+    assert.equal(invalidDates.status, 400)
+
+    const createdResponse = await request('/api/tasks', {
+      method: 'POST',
+      token: ownerSession.token,
+      body: {
+        title: 'Review monthly budget',
+        description: 'Check recurring expenses.',
+        category: 'Finance',
+        priority: 'High',
+        startDate: '2026-10-01',
+        dueDate: '2026-10-30',
+        reminderAt: '2026-10-29',
+      },
+    })
+    assert.equal(createdResponse.status, 201)
+    const created = (await createdResponse.json()).data.task
+    assert.equal(created.status, 'Pending')
+    assert.equal(created.priority, 'High')
+    assert.equal('userId' in created, false)
+
+    const ownerList = await request('/api/tasks', { token: ownerSession.token })
+    assert.equal((await ownerList.json()).data.tasks.length, 1)
+    const otherList = await request('/api/tasks', { token: otherSession.token })
+    assert.deepEqual((await otherList.json()).data.tasks, [])
+    assert.equal((await request(`/api/tasks/${created.id}`, { token: otherSession.token })).status, 404)
+    assert.equal((await request(`/api/tasks/${created.id}`, { method: 'PATCH', token: otherSession.token, body: { title: 'Hijack' } })).status, 404)
+    assert.equal((await request(`/api/tasks/${created.id}`, { method: 'DELETE', token: otherSession.token })).status, 404)
+    const invalidUpdate = await request(`/api/tasks/${created.id}`, {
+      method: 'PATCH',
+      token: ownerSession.token,
+      body: { dueDate: '2026-09-30' },
+    })
+    assert.equal(invalidUpdate.status, 400)
+
+    const editedResponse = await request(`/api/tasks/${created.id}`, {
+      method: 'PATCH',
+      token: ownerSession.token,
+      body: { title: 'Review the monthly budget', status: 'In Progress' },
+    })
+    assert.equal(editedResponse.status, 200)
+    assert.equal((await editedResponse.json()).data.task.status, 'In Progress')
+
+    const completedResponse = await request(`/api/tasks/${created.id}`, {
+      method: 'PATCH',
+      token: ownerSession.token,
+      body: { status: 'Completed' },
+    })
+    const completed = (await completedResponse.json()).data.task
+    assert.equal(completed.status, 'Completed')
+    assert.ok(completed.completedAt)
+
+    assert.equal((await request(`/api/tasks/${created.id}`, { method: 'DELETE', token: ownerSession.token })).status, 200)
+    assert.deepEqual((await (await request('/api/tasks', { token: ownerSession.token })).json()).data.tasks, [])
   })
 
   test('initial provisioning promotes only the selected existing account and cannot overwrite an admin', async () => {

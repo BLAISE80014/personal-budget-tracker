@@ -12,6 +12,7 @@ import dataRoutes from './routes/data.js'
 import notificationRoutes from './routes/notifications.js'
 import preferenceRoutes from './routes/preferences.js'
 import resourceRoutes from './routes/resources.js'
+import taskRoutes from './routes/tasks.js'
 import { requireAdmin } from './middleware/require-admin.js'
 
 const app = express()
@@ -111,6 +112,7 @@ app.use('/api/dashboard', requireAuth, dashboardRoutes)
 app.use('/api/data', requireAuth, dataRoutes)
 app.use('/api/preferences', requireAuth, preferenceRoutes)
 app.use('/api/notifications', requireAuth, notificationRoutes)
+app.use('/api/tasks', requireAuth, taskRoutes)
 app.use('/api', resourceRoutes)
 
 app.use(notFound)
