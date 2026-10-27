@@ -279,6 +279,43 @@ if (!testUri) {
     const admin = await login(provisionedAdmin.email, provisionedAdmin.password, { admin: true })
     assert.equal(admin.user.role, 'admin')
 
+    const targetSession = await login(targetAccount.email, targetAccount.password)
+    const savedProfileResponse = await request('/api/auth/profile', {
+      method: 'PATCH',
+      token: targetSession.token,
+      body: {
+        fullName: 'Profile Updated User',
+        email: targetAccount.email,
+        phone: '555-0199',
+        avatar: 'data:image/jpeg;base64,AAAA',
+      },
+    })
+    assert.equal(savedProfileResponse.status, 200)
+
+    const profileResponse = await request(`/api/admin/users/${targetAccount.user._id}`, { token: admin.token })
+    assert.equal(profileResponse.status, 200)
+    const profile = (await profileResponse.json()).data.user
+    assert.equal(profile.fullName, 'Profile Updated User')
+    assert.equal(profile.phone, '555-0199')
+    assert.equal(profile.avatar, 'data:image/jpeg;base64,AAAA')
+    assert.equal('passwordHash' in profile, false)
+
+    const taskResponse = await request('/api/tasks', {
+      method: 'POST',
+      token: targetSession.token,
+      body: { title: 'Review account budget', category: 'Finance', priority: 'High', dueDate: '2026-11-03' },
+    })
+    assert.equal(taskResponse.status, 201)
+    const adminTasksResponse = await request('/api/admin/tasks?search=account%20budget&status=Pending', { token: admin.token })
+    assert.equal(adminTasksResponse.status, 200)
+    const adminTasks = (await adminTasksResponse.json()).data
+    assert.equal(adminTasks.total, 1)
+    assert.equal(adminTasks.tasks[0].title, 'Review account budget')
+    assert.equal(adminTasks.tasks[0].owner.email, targetAccount.email)
+    assert.equal('userId' in adminTasks.tasks[0], false)
+    const regularAdminTasks = await request('/api/admin/tasks', { token: targetSession.token })
+    assert.equal(regularAdminTasks.status, 403)
+
     const usersResponse = await request('/api/admin/users?limit=100', { token: admin.token })
     assert.equal(usersResponse.status, 200)
     const overview = (await usersResponse.json()).data

@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bell,
   BellRing,
+  CheckSquare,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -420,6 +421,7 @@ export function AppLayout({ children }) {
 const adminNavigation = [
   { path: '', label: 'Dashboard', icon: LayoutDashboard },
   { path: 'users', label: 'Users', icon: Users },
+  { path: 'tasks', label: 'Tasks', icon: CheckSquare },
   { path: 'transactions', label: 'Transactions', icon: ReceiptText },
   { path: 'income', label: 'Income', icon: TrendingUp },
   { path: 'expenses', label: 'Expenses', icon: TrendingDown },
@@ -472,7 +474,8 @@ export function AdminLayout({ children }) {
   const submitSearch = (event) => {
     event.preventDefault()
     const usersPage = location.pathname.endsWith('/users')
-    const destination = usersPage ? 'users' : 'transactions'
+    const tasksPage = location.pathname.endsWith('/tasks')
+    const destination = usersPage ? 'users' : tasksPage ? 'tasks' : 'transactions'
     const params = new URLSearchParams()
     if (search.trim()) params.set('search', search.trim())
     navigate(`/admin/dashboard/${destination}${params.size ? `?${params}` : ''}`)

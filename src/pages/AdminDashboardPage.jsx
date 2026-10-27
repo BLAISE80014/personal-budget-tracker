@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { useAppData, usePreferences } from '../contexts.js'
 import { apiRequest } from '../api/client.js'
-import { AdminLayout } from '../components.jsx'
+import { AdminLayout, ProfileAvatar } from '../components.jsx'
 import './AdminDashboardPage.css'
 
 const PAGE_SIZE = 20
@@ -33,6 +33,7 @@ const sectionTitles = {
   overview: ['Admin Dashboard', 'A clear view of your platform and its financial activity.'],
   users: ['User management', 'Search accounts, review account details, and manage access.'],
   transactions: ['Transactions', 'Review income, expenses, and payments across accounts. Records are read-only.'],
+  tasks: ['Tasks', 'Review tasks created by users. Task records are read-only.'],
   income: ['Income', 'Review recorded income across all accounts.'],
   expenses: ['Expenses', 'Review recorded expenses across all accounts.'],
   categories: ['Categories', 'Review categories created in users’ trackers.'],
@@ -48,7 +49,7 @@ const sectionType = { income: 'income', expenses: 'expenses', categories: 'categ
 
 function formatDate(value) {
   if (!value) return '—'
-  const parsed = new Date(value)
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00Z`) : new Date(value)
   return Number.isNaN(parsed.getTime()) ? String(value) : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed)
 }
 
@@ -195,6 +196,9 @@ export function AdminDashboardPage() {
     if (section === 'users') {
       if (search) params.set('search', search)
       if (roleFilter !== 'all') params.set('role', roleFilter)
+    } else if (section === 'tasks') {
+      if (search) params.set('search', search)
+      if (typeFilter !== 'all') params.set('status', typeFilter)
     } else if (recordSections.has(section)) {
       params.set('type', section === 'transactions' ? typeFilter : sectionType[section])
       if (search) params.set('search', search)
@@ -223,6 +227,13 @@ export function AdminDashboardPage() {
       requests.push(apiRequest(`/admin/users?${queryString}`).then((result) => {
         if (!active) return
         setItems(result.users)
+        setTotal(result.total)
+        setPages(result.pages)
+      }))
+    } else if (section === 'tasks') {
+      requests.push(apiRequest(`/admin/tasks?${queryString}`).then((result) => {
+        if (!active) return
+        setItems(result.tasks)
         setTotal(result.total)
         setPages(result.pages)
       }))
@@ -400,6 +411,28 @@ export function AdminDashboardPage() {
           </section>
         )}
 
+        {section === 'tasks' && (
+          <section className="admin-panel">
+            <div className="admin-table-toolbar">
+              <div><h2>User tasks <span>{total.toLocaleString()}</span></h2><p>Tasks are shown read-only, with their owning user. Only that user can edit them.</p></div>
+              <label className="admin-filter-control"><Filter size={15} /><select aria-label="Filter tasks by status" value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value); changePage(1) }}><option value="all">All statuses</option><option>Pending</option><option>In Progress</option><option>Completed</option></select></label>
+            </div>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Task</th><th>User</th><th>Category</th><th>Priority</th><th>Status</th><th>Due date</th><th>Created</th></tr></thead><tbody>
+              {items.map((task) => <tr key={task.id}>
+                <td><strong>{task.title}</strong><small>{task.description || 'No description'}</small></td>
+                <td>{task.owner?.fullName || 'Account unavailable'}<small>{task.owner?.email || ''}</small></td>
+                <td>{task.category || '—'}</td>
+                <td><span className={`task-priority ${task.priority.toLowerCase()}`}><i />{task.priority}</span></td>
+                <td><span className={`task-status ${task.status.toLowerCase().replace(' ', '-')}`}>{task.status}</span></td>
+                <td>{formatDate(task.dueDate)}</td>
+                <td>{formatDate(task.createdAt)}</td>
+              </tr>)}
+              {!loading && !items.length && <tr><td colSpan="7"><div className="admin-empty">No user tasks match these filters.</div></td></tr>}
+            </tbody></table></div>
+            <Pagination page={page} pages={pages} onPageChange={changePage} />
+          </section>
+        )}
+
         {recordSections.has(section) && (
           <section className="admin-panel">
             <div className="admin-table-toolbar"><div><h2>Records <span>{total.toLocaleString()}</span></h2><p>Read-only financial records. No administrative edit or delete actions are available.</p></div>
@@ -455,7 +488,21 @@ export function AdminDashboardPage() {
         )}
 
         {userLoading && <div className="admin-modal-backdrop"><div className="admin-user-modal" role="dialog" aria-modal="true" aria-label="Loading account details">Loading account details…</div></div>}
-        {selectedUser && <div className="admin-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSelectedUser(null)}><section className="admin-user-modal" role="dialog" aria-modal="true" aria-labelledby="admin-user-modal-title"><button type="button" className="admin-modal-close" aria-label="Close account details" onClick={() => setSelectedUser(null)}>×</button><span className="admin-eyebrow">ACCOUNT DETAILS</span><h2 id="admin-user-modal-title">{selectedUser.user.fullName}</h2><p>{selectedUser.user.email}</p><dl><div><dt>Role</dt><dd>{selectedUser.user.role}</dd></div><div><dt>Registered</dt><dd>{formatDate(selectedUser.user.createdAt)}</dd></div><div><dt>Income entries</dt><dd>{selectedUser.finance.incomeCount} · {currency(selectedUser.finance.incomeTotal, currencyCode)}</dd></div><div><dt>Expense entries</dt><dd>{selectedUser.finance.expenseCount} · {currency(selectedUser.finance.expenseTotal, currencyCode)}</dd></div><div><dt>Savings goals</dt><dd>{selectedUser.finance.savingsGoals}</dd></div><div><dt>Budgets</dt><dd>{selectedUser.finance.budgets}</dd></div></dl><p className="admin-private-data-note">Account financial totals are visible to administrators. Passwords, hashes, and tokens are never shown.</p></section></div>}
+        {selectedUser && <div className="admin-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setSelectedUser(null)}><section className="admin-user-modal" role="dialog" aria-modal="true" aria-labelledby="admin-user-modal-title">
+          <button type="button" className="admin-modal-close" aria-label="Close account details" onClick={() => setSelectedUser(null)}>×</button>
+          <span className="admin-eyebrow">USER PROFILE</span>
+          <div className="admin-user-profile-heading"><ProfileAvatar avatar={selectedUser.user.avatar} name={selectedUser.user.fullName} /><div><h2 id="admin-user-modal-title">{selectedUser.user.fullName}</h2><p>{selectedUser.user.email}</p></div></div>
+          <dl>
+            <div><dt>Role</dt><dd>{selectedUser.user.role}</dd></div>
+            <div><dt>Phone</dt><dd>{selectedUser.user.phone || 'Not provided'}</dd></div>
+            <div><dt>Registered</dt><dd>{formatDate(selectedUser.user.createdAt)}</dd></div>
+            <div><dt>Income entries</dt><dd>{selectedUser.finance.incomeCount} · {currency(selectedUser.finance.incomeTotal, currencyCode)}</dd></div>
+            <div><dt>Expense entries</dt><dd>{selectedUser.finance.expenseCount} · {currency(selectedUser.finance.expenseTotal, currencyCode)}</dd></div>
+            <div><dt>Savings goals</dt><dd>{selectedUser.finance.savingsGoals}</dd></div>
+            <div><dt>Budgets</dt><dd>{selectedUser.finance.budgets}</dd></div>
+          </dl>
+          <p className="admin-private-data-note">Profile information is read from the user's saved account. Passwords, hashes, and tokens are never shown.</p>
+        </section></div>}
       </main>
     </AdminLayout>
   )

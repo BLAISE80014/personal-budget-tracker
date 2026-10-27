@@ -6,6 +6,7 @@ import AdminNotification from '../models/AdminNotification.js'
 import AdminProvisioning from '../models/AdminProvisioning.js'
 import User from '../models/User.js'
 import { Budget, Category, Expense, Income, Payment, SavingsGoal } from '../models/TrackerRecords.js'
+import Task from '../models/Task.js'
 import { adminRoleSchema, validate } from '../utils/validation.js'
 
 const router = Router()
@@ -36,6 +37,13 @@ const recordsQuery = z.object({
   message: 'The start date must be on or before the end date.',
 })
 const activityQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(5).max(100).default(20),
+}).strict()
+const tasksQuery = z.object({
+  search: z.string().trim().max(120).default(''),
+  status: z.enum(['all', 'Pending', 'In Progress', 'Completed']).default('all'),
+  priority: z.enum(['all', 'Low', 'Medium', 'High']).default('all'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(5).max(100).default(20),
 }).strict()
@@ -220,7 +228,7 @@ router.get('/users/:userId', async (req, res) => {
     return res.status(400).json({ success: false, error: { message: 'Invalid account identifier.' } })
   }
   const [user, income, expenses, savings, budgets] = await Promise.all([
-    User.findById(req.params.userId).select('fullName email role phone createdAt').lean(),
+    User.findById(req.params.userId).select('fullName email role phone avatar createdAt').lean(),
     Income.aggregate([{ $match: { userId: new mongoose.Types.ObjectId(req.params.userId) } }, { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$amount' } } }]),
     Expense.aggregate([{ $match: { userId: new mongoose.Types.ObjectId(req.params.userId) } }, { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$amount' } } }]),
     SavingsGoal.countDocuments({ userId: req.params.userId }),
@@ -230,7 +238,7 @@ router.get('/users/:userId', async (req, res) => {
   res.json({
     success: true,
     data: {
-      user: { id: String(user._id), fullName: user.fullName, email: user.email, role: user.role, phone: user.phone, createdAt: user.createdAt },
+      user: { id: String(user._id), fullName: user.fullName, email: user.email, role: user.role, phone: user.phone, avatar: user.avatar, createdAt: user.createdAt },
       finance: {
         incomeCount: income[0]?.count ?? 0,
         incomeTotal: income[0]?.total ?? 0,
@@ -239,6 +247,47 @@ router.get('/users/:userId', async (req, res) => {
         savingsGoals: savings,
         budgets,
       },
+    },
+  })
+})
+
+router.get('/tasks', async (req, res) => {
+  const { search, status, priority, page, limit } = validate(tasksQuery, req.query)
+  const filter = {}
+  if (status !== 'all') filter.status = status
+  if (priority !== 'all') filter.priority = priority
+  if (search) {
+    const match = textMatch(search)
+    filter.$or = [{ title: match }, { description: match }, { category: match }]
+  }
+  const [total, tasks] = await Promise.all([
+    Task.countDocuments(filter),
+    Task.find(filter)
+      .select('userId title description category priority status startDate dueDate reminderAt completedAt createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+  ])
+  const ownerIds = [...new Set(tasks.map((task) => String(task.userId)))]
+  const owners = await User.find({ _id: { $in: ownerIds } }).select('fullName email').lean()
+  const ownerById = new Map(owners.map((owner) => [String(owner._id), owner]))
+
+  res.json({
+    success: true,
+    data: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+      tasks: tasks.map((task) => {
+        const fields = { ...task }
+        const id = String(fields._id)
+        const owner = ownerById.get(String(fields.userId)) ?? null
+        delete fields._id
+        delete fields.userId
+        return { id, ...fields, owner }
+      }),
     },
   })
 })

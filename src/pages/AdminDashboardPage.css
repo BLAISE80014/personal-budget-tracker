@@ -1017,6 +1017,10 @@ html.dark .admin-shell {
 .admin-user-modal h2 { margin: 7px 0 4px; font-size: 1.25rem; }
 .admin-user-modal > p { color: var(--admin-muted); font-size: 0.73rem; }
 .admin-user-modal .admin-private-data-note { border-radius: 7px; padding: 10px; background: var(--admin-bg); font-size: 0.65rem; }
+.admin-user-profile-heading { display: flex; align-items: center; gap: 12px; margin: 13px 0; }
+.admin-user-profile-heading .avatar { width: 52px; height: 52px; flex: 0 0 auto; font-size: 1rem; }
+.admin-user-profile-heading h2 { margin: 0; }
+.admin-user-profile-heading p { margin: 4px 0 0; color: var(--admin-muted); font-size: 0.73rem; }
 .admin-modal-close { position: absolute; top: 12px; right: 13px; border: 0; background: transparent; color: var(--admin-muted); font-size: 1.5rem; cursor: pointer; }
 
 .admin-report-summary {
