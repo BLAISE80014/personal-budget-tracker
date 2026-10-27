@@ -1,4 +1,4 @@
-import { Bell, BookOpen, CarFront, Clapperboard, CreditCard, FileText, HeartPulse, Home, Landmark, Lightbulb, Laptop, PackageOpen, PiggyBank, Plane, Shield, ShieldCheck, ShoppingBag, SlidersHorizontal, Sun, Target, Utensils, User, UserRound, Wallet } from 'lucide-react'
+import { Bell, BookOpen, CalendarCheck, CarFront, Clapperboard, CreditCard, FileText, HeartPulse, Home, Landmark, Lightbulb, Laptop, PackageOpen, PiggyBank, Plane, Shield, ShieldCheck, ShoppingBag, SlidersHorizontal, Sun, Target, Utensils, User, UserRound, Wallet } from 'lucide-react'
 
 export const THEME_STORAGE_KEY = 'theme'
 export const AUTH_STORAGE_KEY = 'budget-tracker-auth'
@@ -94,6 +94,7 @@ export const defaultData = {
 
 export const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: Home },
+  { label: 'Tasks', path: '/tasks', icon: CalendarCheck },
   { label: 'Income', path: '/income', icon: Wallet },
   { label: 'Expenses', path: '/expenses', icon: CreditCard },
   { label: 'Categories', path: '/categories', icon: Landmark },

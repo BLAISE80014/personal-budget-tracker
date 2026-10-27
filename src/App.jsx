@@ -6,6 +6,7 @@ import { NotificationsPage, ProfilePage, SettingsPage } from './pages/SettingsPa
 import { ForgotPasswordPage, ResetPasswordPage } from './pages/PasswordResetPages.jsx'
 import { HomePage } from './pages/HomePage.jsx'
 import { AdminDashboardPage } from './pages/AdminDashboardPage.jsx'
+import { TasksPage } from './pages/TasksPage.jsx'
 import './App.css'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
                 <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
                 <Route path="/admin/dashboard/:section" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
                 <Route path="/income" element={<ProtectedRoute><IncomePage /></ProtectedRoute>} />

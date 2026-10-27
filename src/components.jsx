@@ -238,6 +238,7 @@ export function DashboardHeader() {
     ...data.categories.map((item) => ({ id: `category-${item.id}`, title: item.name, detail: `${data.expenses.filter((expense) => expense.category === item.name).length} expenses`, type: 'Category', path: '/categories', terms: `${item.name} category` })),
     ...data.budgets.map((item) => ({ id: `budget-${item.id}`, title: `${item.category} budget`, detail: money(item.budget), type: 'Budget', path: '/budgets', terms: `${item.category} budget ${item.month}` })),
     ...data.savings.map((item) => ({ id: `savings-${item.id}`, title: item.name, detail: `${money(item.current)} saved · ${money(item.target)} goal`, type: 'Savings goal', path: '/savings', terms: `${item.name} savings goal` })),
+    { id: 'route-tasks', title: 'Tasks', detail: 'Manage your personal tasks', type: 'Page', path: '/tasks', terms: 'tasks todo checklist reminders' },
     { id: 'route-income', title: 'Income', detail: 'View all income records', type: 'Page', path: '/income', terms: 'income earnings salary' },
     { id: 'route-expenses', title: 'Expenses', detail: 'View all expense records', type: 'Page', path: '/expenses', terms: 'expenses spending' },
     { id: 'route-categories', title: 'Categories', detail: 'Manage spending categories', type: 'Page', path: '/categories', terms: 'categories' },
