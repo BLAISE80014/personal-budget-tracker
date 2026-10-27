@@ -41,6 +41,7 @@ async function start() {
     await connectDatabase(process.env.MONGODB_URI)
     await migrateMissingUserRoles()
     await User.collection.createIndex({ passwordResetTokenHash: 1 })
+    await User.collection.createIndex({ lastActiveAt: -1 })
     await removeObsoleteTrackerIndexes()
 
     app.listen(port, () => {

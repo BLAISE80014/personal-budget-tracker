@@ -177,6 +177,7 @@ async function authenticate(req, res, { adminOnly }) {
   if (!adminOnly && user.role === 'admin') {
     return res.status(403).json({ success: false, error: { message: 'Use administrator sign-in at /admin/login.' } })
   }
+  await User.updateOne({ _id: user._id }, { $set: { lastActiveAt: new Date() } })
   await Notification.create({
     id: `${Date.now()}-login`,
     userId: user._id,
@@ -191,6 +192,12 @@ async function authenticate(req, res, { adminOnly }) {
 
 router.post('/login', (req, res) => authenticate(req, res, { adminOnly: false }))
 router.post('/admin/login', (req, res) => authenticate(req, res, { adminOnly: true }))
+
+router.post('/heartbeat', requireAuth, async (req, res) => {
+  const lastActiveAt = new Date()
+  await User.updateOne({ _id: req.user._id }, { $set: { lastActiveAt } })
+  res.json({ success: true, data: { lastActiveAt: lastActiveAt.toISOString() } })
+})
 
 router.get('/me', requireAuth, (req, res) => {
   res.json({ success: true, data: { user: publicUser(req.user) } })

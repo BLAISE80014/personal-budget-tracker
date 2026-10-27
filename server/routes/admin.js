@@ -19,6 +19,7 @@ const recordModels = {
   payments: Payment,
 }
 const datePattern = /^\d{4}-\d{2}-\d{2}$/
+const ACTIVE_WINDOW_MS = 5 * 60 * 1000
 const analyticsQuery = z.object({ range: z.enum(['7', '30', '90', '365']).default('30') }).strict()
 const usersQuery = z.object({
   search: z.string().trim().max(120).default(''),
@@ -122,9 +123,11 @@ async function aggregateDistribution(Model, start, end, field) {
 }
 
 router.get('/overview', async (_req, res) => {
-  const [totalUsers, administrators, newUsersThisMonth, totalIncome, totalExpenses, savingsGoals] = await Promise.all([
+  const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS)
+  const [totalUsers, administrators, activeUsers, newUsersThisMonth, totalIncome, totalExpenses, savingsGoals] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'admin' }),
+    User.countDocuments({ lastActiveAt: { $gte: activeSince } }),
     User.countDocuments({ createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }),
     Income.aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]),
     Expense.aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]),
@@ -138,12 +141,26 @@ router.get('/overview', async (_req, res) => {
         totalUsers,
         administrators,
         regularUsers: totalUsers - administrators,
-        activeUsers: null,
+        activeUsers,
         newUsersThisMonth,
         totalIncome: totalIncome[0]?.total ?? 0,
         totalExpenses: totalExpenses[0]?.total ?? 0,
         savingsGoals,
       },
+    },
+  })
+})
+
+router.get('/active-users', async (_req, res) => {
+  const checkedAt = new Date()
+  const activeSince = new Date(checkedAt.getTime() - ACTIVE_WINDOW_MS)
+  const count = await User.countDocuments({ lastActiveAt: { $gte: activeSince } })
+  res.json({
+    success: true,
+    data: {
+      count,
+      windowMinutes: ACTIVE_WINDOW_MS / 60_000,
+      checkedAt: checkedAt.toISOString(),
     },
   })
 })

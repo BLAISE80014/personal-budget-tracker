@@ -256,6 +256,41 @@ export function AppDataProvider({ children }) {
   }, [sessionToken, dataRequestId, updateSessionToken])
 
   useEffect(() => {
+    if (!sessionToken) return undefined
+    let active = true
+    let requestInFlight = false
+    const sendHeartbeat = async () => {
+      if (!active || document.visibilityState !== 'visible' || requestInFlight) return
+      requestInFlight = true
+      try {
+        await apiRequest('/auth/heartbeat', { method: 'POST' })
+      } catch (requestError) {
+        if (!active) return
+        if (requestError.status === 401) {
+          clearApiToken()
+          localStorage.removeItem('budget-tracker-auth')
+          updateSessionToken(null)
+        } else {
+          setError(requestError.message)
+        }
+      } finally {
+        requestInFlight = false
+      }
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') sendHeartbeat()
+    }
+    sendHeartbeat()
+    const interval = window.setInterval(sendHeartbeat, 60_000)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [sessionToken, updateSessionToken])
+
+  useEffect(() => {
     if (!sessionToken) localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(data))
   }, [data, sessionToken])
 

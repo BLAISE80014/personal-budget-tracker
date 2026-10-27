@@ -135,6 +135,39 @@ if (!testUri) {
     assert.equal(updated.phone, account.user.phone)
   })
 
+  test('authenticated heartbeats power protected active-user counts', async () => {
+    const activeSince = new Date(Date.now() - 5 * 60 * 1000)
+    const existingActiveUsers = await User.countDocuments({ lastActiveAt: { $gte: activeSince } })
+    const activeUser = await createAccount()
+    const adminAccount = await createAccount({ role: 'admin' })
+    const activeSession = await login(activeUser.email, activeUser.password)
+    const adminSession = await login(adminAccount.email, adminAccount.password, { admin: true })
+
+    const now = new Date()
+    await User.updateMany(
+      { _id: { $in: [activeUser.user._id, adminAccount.user._id] } },
+      { $set: { lastActiveAt: now } },
+    )
+    const activeResponse = await request('/api/admin/active-users', { token: adminSession.token })
+    assert.equal(activeResponse.status, 200)
+    assert.equal((await activeResponse.json()).data.count, existingActiveUsers + 2)
+
+    await User.updateOne(
+      { _id: activeUser.user._id },
+      { $set: { lastActiveAt: new Date(Date.now() - 6 * 60 * 1000) } },
+    )
+    const staleResponse = await request('/api/admin/active-users', { token: adminSession.token })
+    assert.equal(staleResponse.status, 200)
+    assert.equal((await staleResponse.json()).data.count, existingActiveUsers + 1)
+
+    const heartbeat = await request('/api/auth/heartbeat', { method: 'POST', token: activeSession.token })
+    assert.equal(heartbeat.status, 200)
+    assert.ok((await heartbeat.json()).data.lastActiveAt)
+    const renewedResponse = await request('/api/admin/active-users', { token: adminSession.token })
+    assert.equal((await renewedResponse.json()).data.count, existingActiveUsers + 2)
+    assert.equal((await request('/api/admin/active-users', { token: activeSession.token })).status, 403)
+  })
+
   test('tasks support authenticated CRUD and enforce per-user ownership', async () => {
     const owner = await createAccount()
     const other = await createAccount()

@@ -171,6 +171,7 @@ export function AdminDashboardPage() {
   const { preferences, setPreferences } = usePreferences()
   const currencyCode = preferences?.currency || 'USD'
   const [overview, setOverview] = useState(null)
+  const [activeUsers, setActiveUsers] = useState(null)
   const [analytics, setAnalytics] = useState(null)
   const [items, setItems] = useState([])
   const [total, setTotal] = useState(0)
@@ -265,6 +266,28 @@ export function AdminDashboardPage() {
       .finally(() => { if (active) setLoadedFor(requestKey) })
     return () => { active = false }
   }, [queryString, range, refreshCount, requestKey, section])
+
+  useEffect(() => {
+    if (section !== 'overview') return undefined
+    let active = true
+    const refreshActiveUsers = () => {
+      apiRequest('/admin/active-users')
+        .then((result) => {
+          if (!active) return
+          setActiveUsers(result.count)
+          setError('')
+        })
+        .catch((requestError) => {
+          if (active) setError(requestError.message)
+        })
+    }
+    refreshActiveUsers()
+    const interval = window.setInterval(refreshActiveUsers, 30_000)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+  }, [section, refreshCount])
 
   const changePage = (nextPage) => {
     const params = new URLSearchParams(searchParams)
@@ -363,7 +386,7 @@ export function AdminDashboardPage() {
               <StatCard icon={CircleDollarSign} label="Income recorded" value={overview ? currency(overview.totalIncome, currencyCode) : '—'} helper={`Across all accounts · ${currencyCode}`} tone="green" />
               <StatCard icon={TrendingDown} label="Expenses recorded" value={overview ? currency(overview.totalExpenses, currencyCode) : '—'} helper={`Across all accounts · ${currencyCode}`} tone="red" />
               <StatCard icon={PiggyBank} label="Savings goals" value={overview?.savingsGoals?.toLocaleString() ?? '—'} helper="Goals across all accounts" tone="purple" />
-              <StatCard icon={ShieldCheck} label="Active users" value="Not tracked" helper="Account status is not stored by this application" tone="slate" />
+              <StatCard icon={ShieldCheck} label="Active users now" value={(activeUsers ?? overview?.activeUsers)?.toLocaleString() ?? '—'} helper="Seen in the last 5 minutes · refreshes every 30 seconds" tone="green" />
             </section>
             <section className="admin-panel admin-main-chart-panel">
               <div className="admin-panel-heading"><div><h2>Platform activity</h2><p>Registration, income and expense trends · last {range === '365' ? '12 months' : `${range} days`}</p></div><BarChart3 size={18} /></div>

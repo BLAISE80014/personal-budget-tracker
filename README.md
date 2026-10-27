@@ -95,6 +95,8 @@ Administrators sign in at `/admin/login` and use `/admin/dashboard`; regular use
 
 The protected admin workspace includes MongoDB-backed account summaries, date-filtered platform analytics, searchable and paginated user and financial-record lists, role-change audit history, and administrator notifications. Financial records are read-only in the admin workspace. Account activation status is not currently represented in the user model, so the dashboard reports it as untracked rather than implying an account state. Currency formatting follows the signed-in administrator's preference and does not convert stored amounts.
 
+The admin overview's active-user count is based on authenticated activity recorded in MongoDB within the previous five minutes. Signed-in browser sessions send an authenticated heartbeat while the app tab is visible (once per minute); the dashboard refreshes the count every 30 seconds. Existing accounts become active in this count the next time they sign in or send a heartbeat. The server creates an index on `lastActiveAt` during startup.
+
 Authenticated users can manage their own tasks from `/tasks`; the backend exposes `GET` and `POST /api/tasks`, `GET` and `PATCH /api/tasks/:taskId`, and `DELETE /api/tasks/:taskId`. Every operation is scoped to the authenticated user. Reminder dates are stored with tasks, but automatic delivery is not configured because the application does not currently run a reminder scheduler.
 
 If SMTP password-reset email is unavailable, reset the configured administrator password from a private interactive terminal with:
