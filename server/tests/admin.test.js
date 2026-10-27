@@ -168,6 +168,48 @@ if (!testUri) {
     assert.equal((await request('/api/admin/active-users', { token: activeSession.token })).status, 403)
   })
 
+  test('user-created accounts, tasks, and records notify every administrator', async () => {
+    const admin = await createAccount({ role: 'admin' })
+    const user = await createAccount()
+    const adminSession = await login(admin.email, admin.password, { admin: true })
+    const userSession = await login(user.email, user.password)
+    const registeredEmail = newEmail()
+
+    const registration = await request('/api/auth/register', {
+      method: 'POST',
+      body: { fullName: 'New Registered User', email: registeredEmail, password: 'test-password-registered' },
+    })
+    assert.equal(registration.status, 201)
+    const accountNotificationCount = await AdminNotification.countDocuments({
+      recipientId: admin.user._id,
+      title: 'New account registered',
+    })
+    assert.equal(accountNotificationCount, 1)
+
+    const task = await request('/api/tasks', {
+      method: 'POST',
+      token: userSession.token,
+      body: { title: 'Review monthly budget' },
+    })
+    assert.equal(task.status, 201)
+    const expense = await request('/api/expenses', {
+      method: 'POST',
+      token: userSession.token,
+      body: { date: '2026-10-27', description: 'Groceries', category: 'Food', amount: 25 },
+    })
+    assert.equal(expense.status, 201)
+
+    const notifications = await AdminNotification.find({ recipientId: admin.user._id }).select('title message').lean()
+    assert.ok(notifications.some(({ title, message }) => title === 'New task created' && message.includes(user.email)))
+    assert.ok(notifications.some(({ title, message }) => title === 'New expense recorded' && message.includes(user.email)))
+
+    const regularNotifications = await request('/api/admin/notifications', { token: userSession.token })
+    assert.equal(regularNotifications.status, 403)
+    const adminNotifications = await request('/api/admin/notifications', { token: adminSession.token })
+    assert.equal(adminNotifications.status, 200)
+    assert.equal((await adminNotifications.json()).data.unread, 3)
+  })
+
   test('tasks support authenticated CRUD and enforce per-user ownership', async () => {
     const owner = await createAccount()
     const other = await createAccount()
@@ -368,7 +410,7 @@ if (!testUri) {
     const notificationResponse = await request('/api/admin/notifications', { token: admin.token })
     assert.equal(notificationResponse.status, 200)
     const notifications = (await notificationResponse.json()).data
-    assert.equal(notifications.unread, 1)
+    assert.equal(notifications.unread, 2)
     const notificationId = notifications.notifications[0].id
     const markedRead = await request(`/api/admin/notifications/${notificationId}/read`, { method: 'PATCH', token: admin.token })
     assert.equal(markedRead.status, 200)

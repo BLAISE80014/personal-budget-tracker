@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import { z } from 'zod'
 import Task from '../models/Task.js'
 import { validate } from '../utils/validation.js'
+import { notifyAdminsOfUserCreation } from '../utils/admin-notifications.js'
 
 const router = Router()
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
@@ -66,6 +67,7 @@ router.post('/', async (req, res) => {
     completedAt: input.status === 'Completed' ? new Date() : null,
   }
   const task = await Task.create({ ...fields, userId: req.user._id })
+  await notifyAdminsOfUserCreation(req.user, 'task')
   res.status(201).json({ success: true, data: { task: serialize(task.toObject()) } })
 })
 

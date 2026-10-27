@@ -8,6 +8,7 @@ import { Notification } from '../models/TrackerRecords.js'
 import User from '../models/User.js'
 import { requireAuth } from '../middleware/auth.js'
 import { forgotPasswordSchema, loginSchema, passwordSchema, profileSchema, registerSchema, resetPasswordSchema, validate } from '../utils/validation.js'
+import { notifyAdminsOfUserCreation } from '../utils/admin-notifications.js'
 
 const router = Router()
 const publicUser = (user) => ({
@@ -163,6 +164,7 @@ router.post('/register', async (req, res) => {
     await User.deleteOne({ _id: user._id })
     throw error
   }
+  await notifyAdminsOfUserCreation(user, 'account')
   res.status(201).json({ success: true, data: { token: issueToken(user), user: publicUser(user) } })
 })
 

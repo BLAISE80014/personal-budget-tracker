@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { requireAuth } from '../middleware/auth.js'
 import { Budget, Expense, trackerRecordModels } from '../models/TrackerRecords.js'
 import { resourceSchemas, validate } from '../utils/validation.js'
+import { notifyAdminsOfUserCreation } from '../utils/admin-notifications.js'
 
 const router = Router()
 const resourceNames = Object.keys(resourceSchemas)
@@ -33,6 +34,7 @@ router.post('/:resource', requireAuth, async (req, res) => {
   record.id ||= randomUUID()
   const Model = trackerRecordModels[req.resource]
   const created = await Model.create({ ...record, userId: req.user._id })
+  await notifyAdminsOfUserCreation(req.user, req.resource)
   res.status(201).json({ success: true, data: { item: serialize(created.toObject()) } })
 })
 

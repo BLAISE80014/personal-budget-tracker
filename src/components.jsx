@@ -458,9 +458,11 @@ export function AdminLayout({ children }) {
         })
     }
     loadNotifications()
+    const interval = window.setInterval(loadNotifications, 30_000)
     window.addEventListener('admin-notifications-updated', loadNotifications)
     return () => {
       active = false
+      window.clearInterval(interval)
       window.removeEventListener('admin-notifications-updated', loadNotifications)
     }
   }, [location.pathname])
