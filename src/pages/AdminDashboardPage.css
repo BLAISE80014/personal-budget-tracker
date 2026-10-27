@@ -768,7 +768,7 @@ html.dark .admin-shell {
   gap: 9px;
 }
 
-.admin-user-cell > i {
+.admin-user-cell > .avatar {
   width: 32px;
   height: 32px;
   display: grid;
@@ -778,7 +778,6 @@ html.dark .admin-shell {
   background: var(--admin-blue-soft);
   color: var(--admin-blue);
   font-size: 0.65rem;
-  font-style: normal;
   font-weight: 700;
 }
 

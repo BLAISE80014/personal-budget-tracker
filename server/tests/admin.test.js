@@ -396,6 +396,7 @@ if (!testUri) {
     const overview = (await usersResponse.json()).data
     const listed = overview.users.find((user) => user.id === String(targetAccount.user._id))
     assert.equal(listed.role, 'user')
+    assert.equal(listed.avatar, 'data:image/jpeg;base64,AAAA')
     assert.equal('passwordHash' in listed, false)
     assert.equal(overview.users.find((user) => user.id === admin.user.id).protected, true)
 

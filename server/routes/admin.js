@@ -218,7 +218,7 @@ router.get('/users', async (req, res) => {
   }
   const [total, users, initialSetup] = await Promise.all([
     User.countDocuments(filter),
-    User.find(filter).select('fullName email role createdAt').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    User.find(filter).select('fullName email role avatar createdAt').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     AdminProvisioning.findById('initial-admin').select('userId').lean(),
   ])
   res.json({
@@ -228,11 +228,12 @@ router.get('/users', async (req, res) => {
       limit,
       total,
       pages: Math.ceil(total / limit),
-      users: users.map(({ _id, fullName, email, role: userRole, createdAt }) => ({
+      users: users.map(({ _id, fullName, email, role: userRole, avatar, createdAt }) => ({
         id: String(_id),
         fullName,
         email,
         role: userRole || 'user',
+        avatar: avatar || '',
         createdAt,
         protected: String(_id) === String(initialSetup?.userId),
       })),
