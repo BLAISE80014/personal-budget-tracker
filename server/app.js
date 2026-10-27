@@ -16,10 +16,12 @@ import { requireAdmin } from './middleware/require-admin.js'
 
 const app = express()
 
-const allowedOrigins = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map((origin) => origin.trim().replace(/\/+$/, ''))
-  .filter(Boolean)
+const allowedOrigins = [
+  ...(process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
+]
 
 if (process.env.NODE_ENV !== 'production') {
   allowedOrigins.push(
