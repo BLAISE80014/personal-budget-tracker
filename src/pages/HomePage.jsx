@@ -28,10 +28,17 @@ export function HomePage() {
   const { loading, dataError, retryData, sessionToken } = useAppData()
   const closeRoleSelection = useCallback(() => setRoleSelectionIntent(''), [])
   const continueRoleSelection = (role) => {
-    navigate(role === 'admin' ? '/admin/login' : roleSelectionIntent === 'login' ? '/login' : '/register')
+    navigate(role === 'admin' ? '/admin/login' : '/login')
     closeRoleSelection()
   }
-  const openRoleSelection = (intent) => setRoleSelectionIntent(intent)
+  const openRoleSelection = () => setRoleSelectionIntent('login')
+  const handleAuthAction = (intent) => {
+    if (intent === 'register') {
+      navigate('/register')
+      return
+    }
+    openRoleSelection()
+  }
 
   useEffect(() => {
     const updateScrollButton = () => setShowBackToTop(window.scrollY > 320)
@@ -75,7 +82,7 @@ export function HomePage() {
 
   return (
     <div className="home-shell min-h-screen">
-      <PublicHeader onAuthAction={openRoleSelection} />
+      <PublicHeader onAuthAction={handleAuthAction} />
 
       <main className="hero-shell">
         <section className="hero-section">
@@ -88,7 +95,7 @@ export function HomePage() {
             </p>
 
             <div className="cta-row">
-              <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Get Started</button>
+              <button type="button" className="primary-button" onClick={() => navigate('/register')}>Get Started</button>
               <a href="#features" className="secondary-button">Learn More</a>
             </div>
           </div>
@@ -198,7 +205,7 @@ export function HomePage() {
             Instead of guessing where your money went, you can review your activity and make your next
             decision with more confidence.
           </p>
-          <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Start tracking</button>
+          <button type="button" className="primary-button" onClick={() => navigate('/register')}>Start tracking</button>
         </div>
       </section>
 
@@ -220,7 +227,7 @@ export function HomePage() {
               <li><Landmark size={16} /> Categories and budgets</li>
               <li><Target size={16} /> Savings goals and reports</li>
             </ul>
-            <button type="button" className="primary-button" onClick={() => openRoleSelection('register')}>Create your free account</button>
+            <button type="button" className="primary-button" onClick={() => navigate('/register')}>Create your free account</button>
             <small>Your budget data stays organized and tied to your account.</small>
           </article>
         </div>
@@ -238,8 +245,8 @@ export function HomePage() {
             <a href="#features">Features</a>
             <a href="#about">About</a>
             <a href="#pricing">Pricing</a>
-            <button type="button" className="home-footer-auth-action" onClick={() => openRoleSelection('login')}>Log in</button>
-            <button type="button" className="home-footer-auth-action" onClick={() => openRoleSelection('register')}>Create account</button>
+            <button type="button" className="home-footer-auth-action" onClick={openRoleSelection}>Log in</button>
+            <button type="button" className="home-footer-auth-action" onClick={() => navigate('/register')}>Create account</button>
           </nav>
           <div className="home-footer-bottom">
             <span>© {new Date().getFullYear()} Personal Budget Tracker</span>
@@ -259,7 +266,6 @@ export function HomePage() {
       )}
       {roleSelectionIntent && (
         <RoleSelectionDialog
-          intent={roleSelectionIntent}
           onClose={closeRoleSelection}
           onContinue={continueRoleSelection}
         />
