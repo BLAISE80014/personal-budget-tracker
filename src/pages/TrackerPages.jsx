@@ -22,6 +22,7 @@ import { AUTH_STORAGE_KEY, belongsToMonth, categoryIcons, compactMoney, donutGra
 import { useAppData, useNotifications } from '../contexts.js'
 import { AppLayout, DataModal, PublicHeader, SummaryCard } from '../components.jsx'
 import { apiRequest, setApiToken } from '../api/client.js'
+import budgetlyLogo from '../assets/personal-budget-tracker-logo.png'
 
 export function AuthPage({ mode, adminLogin = false }) {
   const location = useLocation()
@@ -201,7 +202,7 @@ export function DashboardPage() {
       <main className="dashboard-content dashboard-page">
         <header className="dashboard-page-heading">
           <div>
-            <h1>Budgetly dashboard</h1>
+            <h1 className="dashboard-title"><img src={budgetlyLogo} alt="" />Budgetly dashboard</h1>
             <p>Your finances at a glance. Track cash flow, spending, and savings in one place.</p>
           </div>
           <span className="dashboard-period"><CalendarDays size={15} /> Last 6 months</span>

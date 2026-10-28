@@ -16,6 +16,7 @@ import { PublicHeader } from '../components.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { apiRequest } from '../api/client.js'
 import RoleSelectionDialog from '../components/RoleSelectionDialog.jsx'
+import budgetlyLogo from '../assets/personal-budget-tracker-logo.png'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -109,7 +110,7 @@ export function HomePage() {
               <div className="illustration-plant"><i /><i /><i /><i /><b /></div>
               <div className="finance-dashboard">
                 <div className="finance-topbar">
-                  <div><span className="tiny-brand">PT</span><b>Dashboard</b></div>
+                  <div><span className="tiny-brand"><img src={budgetlyLogo} alt="" /></span><b>Dashboard</b></div>
                   <span className="tiny-avatar">JD</span>
                 </div>
                 <div className="finance-balance">
@@ -235,7 +236,7 @@ export function HomePage() {
       <footer className="home-footer">
         <div className="home-footer-inner">
           <div className="home-footer-brand">
-            <span className="brand-mark">PT</span>
+            <span className="home-footer-logo"><img src={budgetlyLogo} alt="" /></span>
             <div>
               <strong>Budgetly</strong>
               <p>Make every money decision with more confidence.</p>

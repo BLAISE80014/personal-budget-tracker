@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ShieldCheck, UserRound, X } from 'lucide-react'
+import budgetlyLogo from '../assets/personal-budget-tracker-logo.png'
 import './RoleSelectionDialog.css'
 
 export default function RoleSelectionDialog({ onClose, onContinue }) {
@@ -27,7 +28,7 @@ export default function RoleSelectionDialog({ onClose, onContinue }) {
           <X size={18} />
         </button>
         <div className="role-dialog-heading">
-          <span className="role-dialog-brand">PT</span>
+          <span className="role-dialog-brand"><img src={budgetlyLogo} alt="" /></span>
           <h2 id="role-dialog-title">Welcome to Budgetly</h2>
           <p id="role-dialog-description">Choose how you want to continue.</p>
         </div>

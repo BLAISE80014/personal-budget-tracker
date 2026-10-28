@@ -74,6 +74,19 @@
   box-shadow: none;
 }
 
+.role-dialog-brand {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+}
+
+.role-dialog-brand img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .role-dialog-heading h2 {
   max-width: 400px;
   margin: 0;
