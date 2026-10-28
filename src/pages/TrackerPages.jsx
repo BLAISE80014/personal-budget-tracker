@@ -201,8 +201,8 @@ export function DashboardPage() {
       <main className="dashboard-content dashboard-page">
         <header className="dashboard-page-heading">
           <div>
-            <h1>Dashboard</h1>
-            <p>Here’s your financial overview at a glance.</p>
+            <h1>Budgetly dashboard</h1>
+            <p>Your finances at a glance. Track cash flow, spending, and savings in one place.</p>
           </div>
           <span className="dashboard-period"><CalendarDays size={15} /> Last 6 months</span>
         </header>

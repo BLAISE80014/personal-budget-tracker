@@ -28,7 +28,7 @@ export default function RoleSelectionDialog({ onClose, onContinue }) {
         </button>
         <div className="role-dialog-heading">
           <span className="role-dialog-brand">PT</span>
-          <h2 id="role-dialog-title">Welcome to Personal Budget Tracker</h2>
+          <h2 id="role-dialog-title">Welcome to Budgetly</h2>
           <p id="role-dialog-description">Choose how you want to continue.</p>
         </div>
         <div className="role-choice-list" role="group" aria-label="Choose account type">

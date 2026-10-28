@@ -97,7 +97,7 @@ export function SettingsPage() {
                 <div className="account-detail-row"><span><UserRound size={17} /> Account name</span><strong>{data.user.fullName}</strong></div>
                 <div className="account-detail-row"><span><Mail size={17} /> Email address</span><strong>{data.user.email}</strong></div>
                 <div className="account-detail-row"><span><ShieldCheck size={17} /> Account type</span><strong>Personal account</strong></div>
-                <div className="settings-notice">Your account and tracker records are securely stored by the Personal Budget Tracker service.</div>
+                <div className="settings-notice">Your account and tracker records are securely stored by the Budgetly service.</div>
                 <button type="button" className="outline-button" onClick={() => navigate('/profile')}>Open full profile</button>
               </div>
             )}

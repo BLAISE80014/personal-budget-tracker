@@ -10,13 +10,13 @@ export default function LoadingScreen({ error, onRetry, retrying = false }) {
       aria-live={hasError ? 'off' : 'polite'}
     >
       <div className="budget-loader-content flex w-full max-w-sm flex-col items-center">
-        <h1 className="sr-only">Personal Budget Tracker</h1>
+        <h1 className="sr-only">Budgetly</h1>
         <div className="relative mb-4 flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
           {!hasError && <span className="budget-loader-ring absolute inset-0 rounded-full" aria-hidden="true" />}
           <img
             className="relative z-10 h-[calc(100%-1rem)] w-[calc(100%-1rem)] object-contain"
             src={budgetTrackerLogo}
-            alt="Personal Budget Tracker"
+            alt="Budgetly"
             fetchPriority="high"
           />
         </div>

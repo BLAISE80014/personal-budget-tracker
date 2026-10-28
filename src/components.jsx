@@ -113,9 +113,9 @@ export function ThemeToggle() {
 export function PublicHeader({ minimal = false, onAuthAction }) {
   return (
     <header className="public-header">
-      <Link to="/" className="brand-wrap" aria-label="Personal Budget Tracker home">
+      <Link to="/" className="brand-wrap" aria-label="Budgetly home">
         <div className="brand-mark">PT</div>
-        <span>Personal Budget Tracker</span>
+        <span>Budgetly</span>
       </Link>
 
       {!minimal && (
@@ -383,7 +383,7 @@ export function AppLayout({ children }) {
       <aside className="sidebar">
         <div className="brand-wrap sidebar-brand">
           <div className="brand-mark">PT</div>
-          <span>Personal Budget Tracker</span>
+          <span>Budgetly</span>
         </div>
 
         <nav className="sidebar-nav">
@@ -490,7 +490,7 @@ export function AdminLayout({ children }) {
       <aside className={`admin-sidebar ${menuOpen ? 'open' : ''}`}>
         <Link to="/admin/dashboard" className="admin-brand" onClick={() => setMenuOpen(false)}>
           <span className="admin-brand-mark"><ShieldCheck size={19} /></span>
-          <span><strong>Personal Budget Tracker</strong><small>Administration</small></span>
+          <span><strong>Budgetly</strong><small>Administration</small></span>
         </Link>
         <div className="admin-nav-caption">WORKSPACE</div>
         <nav className="admin-nav" aria-label="Administrator navigation">

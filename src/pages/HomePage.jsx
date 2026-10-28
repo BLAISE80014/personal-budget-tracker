@@ -201,7 +201,7 @@ export function HomePage() {
           <span className="home-eyebrow">About</span>
           <h2>Small steps make money feel simpler</h2>
           <p>
-            Personal Budget Tracker helps you bring income, expenses, budgets, and savings goals together.
+            Budgetly helps you bring income, expenses, budgets, and savings goals together.
             Instead of guessing where your money went, you can review your activity and make your next
             decision with more confidence.
           </p>
@@ -237,7 +237,7 @@ export function HomePage() {
           <div className="home-footer-brand">
             <span className="brand-mark">PT</span>
             <div>
-              <strong>Personal Budget Tracker</strong>
+              <strong>Budgetly</strong>
               <p>Make every money decision with more confidence.</p>
             </div>
           </div>
@@ -249,7 +249,7 @@ export function HomePage() {
             <button type="button" className="home-footer-auth-action" onClick={() => navigate('/register')}>Create account</button>
           </nav>
           <div className="home-footer-bottom">
-            <span>© {new Date().getFullYear()} Personal Budget Tracker</span>
+            <span>© {new Date().getFullYear()} Budgetly</span>
             <span>Built for a healthier relationship with money.</span>
           </div>
         </div>
