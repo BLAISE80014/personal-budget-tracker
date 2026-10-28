@@ -47,7 +47,7 @@ html.dark {
 * { box-sizing: border-box; }
 
 html {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 html, body, #root {
@@ -2228,7 +2228,7 @@ html.dark .home-info-card {
 }
 
 html {
-  font-size: 18px;
+  font-size: 16px;
   scroll-behavior: smooth;
 }
 
