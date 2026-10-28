@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowUpRight,
@@ -189,6 +189,7 @@ export function AdminDashboardPage() {
   const [userLoading, setUserLoading] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
   const [refreshCount, setRefreshCount] = useState(0)
+  const notificationViewOpened = useRef(false)
   const page = Math.max(1, Number(searchParams.get('page') || 1))
   const search = searchParams.get('search') || ''
   const titles = sectionTitles[section]
@@ -216,6 +217,7 @@ export function AdminDashboardPage() {
 
   useEffect(() => {
     let active = true
+    if (section !== 'notifications') notificationViewOpened.current = false
     if (section === 'settings') {
       return undefined
     }
@@ -254,7 +256,18 @@ export function AdminDashboardPage() {
         setPages(result.pages)
       }))
     } else if (section === 'notifications') {
-      requests.push(apiRequest(`/admin/notifications?${queryString}`).then((result) => {
+      const markVisible = notificationViewOpened.current
+        ? Promise.resolve()
+        : apiRequest('/admin/notifications/read-all', { method: 'PATCH' })
+          .then(() => {
+            notificationViewOpened.current = true
+            window.dispatchEvent(new Event('admin-notifications-updated'))
+          })
+          .catch((requestError) => {
+            notificationViewOpened.current = false
+            throw requestError
+          })
+      requests.push(markVisible.then(() => apiRequest(`/admin/notifications?${queryString}`)).then((result) => {
         if (!active) return
         setItems(result.notifications)
         setTotal(result.total)

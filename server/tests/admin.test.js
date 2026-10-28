@@ -416,6 +416,11 @@ if (!testUri) {
     const markedRead = await request(`/api/admin/notifications/${notificationId}/read`, { method: 'PATCH', token: admin.token })
     assert.equal(markedRead.status, 200)
     assert.equal((await markedRead.json()).data.read, true)
+    const markedAllRead = await request('/api/admin/notifications/read-all', { method: 'PATCH', token: admin.token })
+    assert.equal(markedAllRead.status, 200)
+    assert.equal((await markedAllRead.json()).data.unread, 0)
+    const afterReadAll = await request('/api/admin/notifications', { token: admin.token })
+    assert.equal((await afterReadAll.json()).data.unread, 0)
 
     const secondAdmin = await login(targetAccount.email, targetAccount.password, { admin: true })
     const protectedAdminDemotion = await request(`/api/admin/users/${admin.user.id}/role`, {

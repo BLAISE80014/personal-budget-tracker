@@ -426,6 +426,14 @@ router.get('/notifications', async (req, res) => {
   })
 })
 
+router.patch('/notifications/read-all', async (req, res) => {
+  await AdminNotification.updateMany(
+    { recipientId: req.user._id, read: false },
+    { $set: { read: true } },
+  )
+  res.json({ success: true, data: { unread: 0 } })
+})
+
 router.patch('/notifications/:notificationId/read', async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.notificationId)) {
     return res.status(400).json({ success: false, error: { message: 'Invalid notification identifier.' } })
