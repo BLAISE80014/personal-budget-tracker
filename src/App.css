@@ -4954,31 +4954,40 @@ html.dark .home-shell .feature-card + .feature-card {
 
 .sidebar-brand {
   gap: 12px;
-  min-height: 76px;
-  font-size: 1.08rem;
+  min-height: 68px;
+  font-size: 1rem;
   color: #ebf2ff;
 }
 
 .sidebar-nav {
-  gap: 9px;
+  min-height: 0;
+  gap: 5px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(204, 212, 233, 0.3) transparent;
+  scrollbar-width: thin;
 }
 
 .nav-item {
-  min-height: 48px;
-  gap: 13px;
-  font-size: 0.9rem;
+  min-height: 44px;
+  flex: 0 0 auto;
+  gap: 11px;
+  font-size: 0.86rem;
 }
 
 .nav-item > svg {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 
 .logout-nav {
-  min-height: 48px;
-  height: 48px;
-  font-size: 0.9rem;
+  min-height: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  margin-top: 12px;
+  background: var(--sidebar-bg);
+  font-size: 0.86rem;
 }
 
 .logout-nav > svg {
@@ -5411,6 +5420,12 @@ html.dark .home-shell .feature-card + .feature-card {
   }
 
   .sidebar {
+    flex: none;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    position: static;
+    overflow: visible;
     padding: 12px 12px 14px;
   }
 
@@ -5421,8 +5436,10 @@ html.dark .home-shell .feature-card + .feature-card {
   }
 
   .sidebar-nav {
+    min-height: auto;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 7px;
+    overflow: visible;
   }
 
   .sidebar-nav .nav-item {
@@ -5435,6 +5452,10 @@ html.dark .home-shell .feature-card + .feature-card {
   .sidebar-nav .nav-item > svg {
     width: 22px;
     height: 22px;
+  }
+
+  .logout-nav {
+    margin-top: 8px;
   }
 
   .content-panel {
