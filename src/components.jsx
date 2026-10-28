@@ -20,7 +20,6 @@ import {
   Search,
   Settings,
   Shield,
-  ShieldCheck,
   Sun,
   Tags,
   Target,
@@ -35,6 +34,7 @@ import { AUTH_STORAGE_KEY, initials, money, navItems, profileAvatarOptions, sett
 import { useAppData, useNotifications, usePreferences, useTheme } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
 import LoadingScreen from './components/LoadingScreen.jsx'
+import budgetlyLogo from './assets/personal-budget-tracker-logo.png'
 
 export function DataModal({ title, form, setForm, fields, onClose, onSave, submitLabel = 'Save', isSaving = false }) {
   const changeField = (event) => {
@@ -114,7 +114,7 @@ export function PublicHeader({ minimal = false, onAuthAction }) {
   return (
     <header className="public-header">
       <Link to="/" className="brand-wrap" aria-label="Budgetly home">
-        <div className="brand-mark">PT</div>
+        <span className="brand-logo-frame"><img className="brand-logo" src={budgetlyLogo} alt="" /></span>
         <span>Budgetly</span>
       </Link>
 
@@ -382,7 +382,7 @@ export function AppLayout({ children }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-wrap sidebar-brand">
-          <div className="brand-mark">PT</div>
+          <span className="brand-logo-frame"><img className="brand-logo" src={budgetlyLogo} alt="" /></span>
           <span>Budgetly</span>
         </div>
 
@@ -489,7 +489,7 @@ export function AdminLayout({ children }) {
       {menuOpen && <button type="button" className="admin-mobile-backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />}
       <aside className={`admin-sidebar ${menuOpen ? 'open' : ''}`}>
         <Link to="/admin/dashboard" className="admin-brand" onClick={() => setMenuOpen(false)}>
-          <span className="admin-brand-mark"><ShieldCheck size={19} /></span>
+          <span className="admin-brand-mark"><img className="brand-logo" src={budgetlyLogo} alt="" /></span>
           <span><strong>Budgetly</strong><small>Administration</small></span>
         </Link>
         <div className="admin-nav-caption">WORKSPACE</div>

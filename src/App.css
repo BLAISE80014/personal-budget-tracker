@@ -46,6 +46,10 @@ html.dark {
 
 * { box-sizing: border-box; }
 
+html {
+  font-size: 18px;
+}
+
 html, body, #root {
   margin: 0;
   min-height: 100%;
@@ -4870,6 +4874,730 @@ html.dark .home-shell .feature-card + .feature-card {
   padding: 18px 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+}
+
+.brand-logo-frame {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(8, 16, 40, 0.18);
+}
+
+.brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sidebar-brand {
+  gap: 12px;
+  min-height: 76px;
+  font-size: 1.08rem;
+  color: #ebf2ff;
+}
+
+.sidebar-nav {
+  gap: 9px;
+}
+
+.nav-item {
+  min-height: 48px;
+  gap: 13px;
+  font-size: 0.9rem;
+}
+
+.nav-item > svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+
+.logout-nav {
+  min-height: 48px;
+  height: 48px;
+  font-size: 0.9rem;
+}
+
+.logout-nav > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dashboard-header {
+  min-height: 60px;
+  gap: 20px;
+}
+
+.header-tools {
+  gap: 14px;
+}
+
+.header-tools .theme-toggle,
+.header-tools .icon-button,
+.header-tools .logout-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.header-tools .theme-toggle svg,
+.header-tools .icon-button svg,
+.header-tools .logout-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.dashboard-search {
+  min-height: 46px;
+  font-size: 0.86rem;
+}
+
+.dashboard-search > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-mini {
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.profile-mini .avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.dashboard-page-heading h1 {
+  font-size: clamp(1.8rem, 2.4vw, 2rem);
+}
+
+.dashboard-page-heading p {
+  font-size: 0.92rem;
+}
+
+.dashboard-summary-grid {
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.dashboard-summary-card {
+  min-height: 188px;
+  padding: 22px 24px 20px;
+}
+
+.dashboard-summary-icon {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  border-radius: 13px;
+}
+
+.dashboard-summary-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.dashboard-summary-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.dashboard-summary-value {
+  font-size: clamp(1.65rem, 2.15vw, 2rem);
+}
+
+.dashboard-summary-trend,
+.dashboard-summary-detail {
+  font-size: 0.76rem;
+}
+
+.dashboard-quick-actions-heading {
+  margin-bottom: 15px;
+}
+
+.dashboard-quick-actions-heading h2 {
+  font-size: 1.2rem;
+}
+
+.dashboard-quick-actions-heading p {
+  font-size: 0.84rem;
+}
+
+.dashboard-quick-action-grid {
+  gap: 18px;
+}
+
+.dashboard-quick-action {
+  min-height: 92px;
+  gap: 13px;
+  padding: 16px;
+}
+
+.dashboard-quick-action-icon {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+}
+
+.dashboard-quick-action-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.dashboard-quick-action strong {
+  font-size: 0.88rem;
+}
+
+.dashboard-quick-action small {
+  font-size: 0.76rem;
+}
+
+.dashboard-main-grid,
+.dashboard-bottom-grid {
+  gap: 22px;
+  margin-bottom: 24px;
+}
+
+.dashboard-panel {
+  padding: 24px;
+}
+
+.dashboard-panel .panel-header {
+  min-height: 30px;
+  margin-bottom: 18px;
+}
+
+.dashboard-panel .panel-header h3 {
+  font-size: 1.2rem;
+}
+
+.dashboard-view-link {
+  font-size: 0.82rem;
+}
+
+.dashboard-chart-legend {
+  font-size: 0.8rem;
+}
+
+.dashboard-chart-legend i,
+.dashboard-category-name i {
+  width: 11px;
+  height: 11px;
+  flex-basis: 11px;
+}
+
+.dashboard-chart {
+  height: 250px;
+}
+
+.dashboard-y-axis,
+.dashboard-bar-label {
+  font-size: 0.74rem;
+}
+
+.dashboard-expense-summary {
+  min-height: 260px;
+  gap: 18px;
+}
+
+.dashboard-donut {
+  width: min(184px, 100%);
+}
+
+.dashboard-donut .donut-center strong {
+  font-size: 1.05rem;
+}
+
+.dashboard-donut .donut-center span,
+.dashboard-category-name,
+.dashboard-category-values strong,
+.dashboard-category-values small {
+  font-size: 0.76rem;
+}
+
+.dashboard-bottom-grid {
+  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(220px, 0.9fr));
+}
+
+.dashboard-transactions-panel,
+.dashboard-overview-panel,
+.dashboard-savings-panel {
+  min-height: 330px;
+}
+
+.dashboard-transaction {
+  min-height: 58px;
+  gap: 13px;
+}
+
+.dashboard-transaction-icon {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+}
+
+.dashboard-transaction-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.dashboard-transaction-name strong,
+.dashboard-transaction-amount,
+.dashboard-progress-heading > span {
+  font-size: 0.84rem;
+}
+
+.dashboard-transaction-name small,
+.dashboard-progress-percent {
+  font-size: 0.76rem;
+}
+
+.dashboard-progress-heading > strong {
+  font-size: 0.86rem;
+}
+
+.dashboard-progress-list,
+.dashboard-savings-list {
+  gap: 20px;
+}
+
+.page-header-row h2,
+.tasks-page-heading h1 {
+  font-size: clamp(1.8rem, 2.6vw, 2rem);
+}
+
+.panel-header h3,
+.modal-header h3 {
+  font-size: 1.2rem;
+}
+
+.summary-value {
+  font-size: clamp(1.7rem, 2vw, 2rem);
+}
+
+.summary-helper,
+.budget-meta,
+.small-row {
+  font-size: 0.82rem;
+}
+
+.page-header-row,
+.page-panel {
+  min-width: 0;
+}
+
+.data-table,
+.wide-table,
+.tasks-table,
+.admin-table {
+  font-size: 0.84rem;
+}
+
+.auth-card {
+  padding: 34px 36px 28px;
+}
+
+.auth-card h1 {
+  font-size: clamp(1.85rem, 3vw, 2.1rem);
+}
+
+.auth-card label span,
+.modal-form label {
+  font-size: 0.82rem;
+}
+
+.auth-card input,
+.modal-form input,
+.modal-form select,
+.modal-form textarea {
+  min-height: 48px;
+  font-size: 0.9rem;
+}
+
+.primary-button,
+.secondary-button,
+.outline-button,
+.mini-button,
+.nav-button {
+  min-height: 44px;
+  font-size: 0.88rem;
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
+}
+
+.action-button svg {
+  width: 19px;
+  height: 19px;
+}
+
+.icon-button,
+.theme-toggle {
+  width: 42px;
+  height: 42px;
+}
+
+.icon-button svg,
+.theme-toggle svg {
+  width: 21px;
+  height: 21px;
+}
+
+.admin-brand-mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.admin-brand-mark .brand-logo {
+  width: 100%;
+  height: 100%;
+}
+
+.admin-nav-link {
+  min-height: 46px;
+  gap: 13px;
+  font-size: 0.86rem;
+}
+
+.admin-nav-link > svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+}
+
+.tasks-page-heading h1 {
+  font-size: clamp(1.8rem, 2.6vw, 2rem);
+}
+
+.tasks-page-heading p {
+  font-size: 0.9rem;
+}
+
+.tasks-summary-grid {
+  gap: 16px;
+}
+
+.task-summary-icon {
+  width: 46px;
+  height: 46px;
+}
+
+.task-summary-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.task-summary-label,
+.tasks-tabs button,
+.tasks-search input,
+.tasks-filter-controls select,
+.tasks-clear-button {
+  font-size: 0.78rem;
+}
+
+.task-summary-card strong {
+  font-size: 1.3rem;
+}
+
+.role-dialog {
+  width: min(100%, 560px);
+}
+
+@media (max-width: 1100px) {
+  .sidebar {
+    flex-basis: 210px;
+    width: 210px;
+  }
+
+  .sidebar-brand {
+    min-height: 72px;
+    font-size: 1rem;
+  }
+
+  .dashboard-bottom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-transactions-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-main-grid,
+  .dashboard-bottom-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-transactions-panel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-logo-frame {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .sidebar {
+    padding: 12px 12px 14px;
+  }
+
+  .sidebar-brand {
+    min-height: 60px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+  }
+
+  .sidebar-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .sidebar-nav .nav-item {
+    min-height: 58px;
+    gap: 5px;
+    padding: 6px 3px;
+    font-size: 0.76rem;
+  }
+
+  .sidebar-nav .nav-item > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .content-panel {
+    padding: 16px 16px 24px;
+  }
+
+  .dashboard-header {
+    gap: 14px;
+    padding-bottom: 16px;
+  }
+
+  .dashboard-search {
+    width: 100%;
+    max-width: none;
+  }
+
+  .header-tools {
+    width: 100%;
+    gap: 9px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .profile-mini {
+    padding: 0;
+  }
+
+  .profile-mini > div {
+    display: none;
+  }
+
+  .header-tools .theme-toggle,
+  .header-tools .icon-button,
+  .header-tools .logout-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .dashboard-summary-grid {
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .dashboard-summary-card {
+    min-height: 168px;
+    padding: 17px;
+  }
+
+  .dashboard-summary-value {
+    font-size: clamp(1.45rem, 5vw, 1.8rem);
+  }
+
+  .dashboard-quick-action-grid {
+    gap: 12px;
+  }
+
+  .dashboard-quick-action {
+    min-height: 82px;
+    padding: 12px;
+  }
+
+  .dashboard-panel {
+    padding: 20px;
+  }
+
+  .dashboard-chart {
+    height: 220px;
+  }
+
+  .dashboard-expense-summary {
+    min-height: 225px;
+  }
+
+  .tasks-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-sidebar {
+    width: min(300px, calc(100vw - 48px));
+  }
+}
+
+@media (max-width: 420px) {
+  html {
+    font-size: 16px;
+  }
+
+  .sidebar {
+    flex: none;
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 12px;
+  }
+
+  .sidebar-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sidebar-nav .nav-item {
+    font-size: 0.88rem;
+  }
+
+  .content-panel {
+    padding: 14px 12px 20px;
+  }
+
+  .dashboard-summary-grid {
+    gap: 10px;
+  }
+
+  .dashboard-summary-card {
+    min-height: 158px;
+    padding: 14px;
+  }
+
+  .dashboard-summary-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .dashboard-summary-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .dashboard-quick-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-quick-action {
+    min-height: 74px;
+  }
+}
+
+:is(.app-shell, .admin-shell, .auth-shell, .home-shell) small {
+  font-size: max(0.75rem, 13px);
+}
+
+.admin-page-heading h1 {
+  font-size: clamp(1.8rem, 2.4vw, 2rem);
+}
+
+.admin-page-heading p,
+.admin-panel-heading p,
+.admin-table-toolbar p {
+  font-size: 0.84rem;
+}
+
+.admin-panel-heading h2,
+.admin-table-toolbar h2 {
+  font-size: 1.15rem;
+}
+
+.admin-stat-icon {
+  width: 46px;
+  height: 46px;
+}
+
+.admin-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.admin-stat-label,
+.admin-stat-helper {
+  font-size: 0.78rem;
+}
+
+.admin-stat-value {
+  font-size: clamp(1.4rem, 2vw, 1.65rem);
+}
+
+.admin-action-button,
+.admin-range-picker,
+.admin-filter-control,
+.admin-export-button {
+  min-height: 42px;
+  font-size: 0.82rem;
+}
+
+.admin-table td,
+.admin-table th {
+  font-size: 0.82rem;
+}
+
+.tasks-table th,
+.tasks-table td,
+.tasks-title-cell strong,
+.tasks-title-cell small,
+.task-priority,
+.task-status {
+  font-size: max(0.76rem, 13px);
+}
+
+.task-summary-label,
+.tasks-tabs button,
+.tasks-search input,
+.tasks-filter-controls select,
+.tasks-clear-button {
+  font-size: max(0.8rem, 13px);
+}
+
+.admin-nav-link {
+  font-size: 0.86rem;
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    flex: none;
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+
+  .sidebar-nav .nav-item {
+    font-size: 0.88rem;
+  }
 }
 
 .profile-avatar-picker h4 {
