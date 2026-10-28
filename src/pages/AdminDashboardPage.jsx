@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useAppData, usePreferences } from '../contexts.js'
 import { apiRequest } from '../api/client.js'
+import { formatDate as formatTrackerDate, localeForLanguage, readPreferences } from '../app-data.js'
 import { AdminLayout, ProfileAvatar } from '../components.jsx'
 import './AdminDashboardPage.css'
 
@@ -49,12 +50,12 @@ const sectionType = { income: 'income', expenses: 'expenses', categories: 'categ
 
 function formatDate(value) {
   if (!value) return '—'
-  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00Z`) : new Date(value)
-  return Number.isNaN(parsed.getTime()) ? String(value) : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed)
+  return formatTrackerDate(value)
 }
 
 function currency(value, currencyCode) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode, maximumFractionDigits: 0 }).format(Number(value) || 0)
+  const locale = localeForLanguage(readPreferences().language)
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode, maximumFractionDigits: 0 }).format(Number(value) || 0)
 }
 
 function metricPath(values, width, height, padding = 8) {

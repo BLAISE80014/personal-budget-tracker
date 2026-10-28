@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { APP_STORAGE_KEY, THEME_STORAGE_KEY, PREFERENCES_STORAGE_KEY, NOTIFICATIONS_STORAGE_KEY, initialNotifications, readData, readPreferences } from './app-data.js'
 import { AppDataContext, NotificationsContext, PreferencesContext, ThemeContext } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
+import { translate } from './translations.js'
 
 const MIN_DATA_LOADING_DURATION = 3000
 
@@ -37,6 +38,12 @@ export function PreferencesProvider({ children }) {
   const [loadedForToken, setLoadedForToken] = useState(null)
   const { theme, setTheme } = useContext(ThemeContext)
   const { sessionToken, setSessionToken } = useContext(AppDataContext)
+
+  useEffect(() => {
+    const language = preferences.language
+    document.documentElement.lang = language === 'Kinyarwanda' ? 'rw' : 'en'
+    document.title = `Budgetly | ${translate('Personal Budget Tracker', language)}`
+  }, [preferences.language])
 
   useEffect(() => {
     if (!sessionToken) {

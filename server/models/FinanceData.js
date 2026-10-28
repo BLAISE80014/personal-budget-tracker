@@ -55,7 +55,7 @@ const preferencesSchema = new mongoose.Schema({
     savingsAlerts: { type: Boolean, default: true },
   },
   currency: { type: String, default: 'USD', enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'RWF'] },
-  language: { type: String, default: 'English', enum: ['English', 'French', 'Spanish'] },
+  language: { type: String, default: 'English', enum: ['English', 'French', 'Spanish', 'Kinyarwanda'] },
   dateFormat: { type: String, default: 'MMM d, yyyy', enum: ['MMM d, yyyy', 'MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy-MM-dd'] },
   theme: { type: String, default: 'light', enum: ['light', 'dark', 'system'] },
 }, { _id: false, strict: 'throw' })

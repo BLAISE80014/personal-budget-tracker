@@ -33,6 +33,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@babel/parser": "^7.29.11",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",

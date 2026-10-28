@@ -122,7 +122,7 @@ export const readPreferences = () => {
   }
 }
 
-export const localeForLanguage = (language) => ({ French: 'fr-FR', Spanish: 'es-ES', English: 'en-US' }[language] || 'en-US')
+export const localeForLanguage = (language) => ({ French: 'fr-FR', Spanish: 'es-ES', English: 'en-US', Kinyarwanda: 'rw-RW' }[language] || 'en-US')
 export const money = (value) => {
   const preferences = readPreferences()
   return new Intl.NumberFormat(localeForLanguage(preferences.language), {
@@ -246,9 +246,10 @@ export const getMonthlyTotals = (income, expenses) => {
     .map((entry) => ({ ...entry, parsedDate: parseLocalDate(entry.date) }))
     .filter((entry) => !Number.isNaN(entry.parsedDate.getTime()))
   const latest = entries.reduce((date, entry) => entry.parsedDate > date ? entry.parsedDate : date, new Date(0))
+  const locale = localeForLanguage(readPreferences().language)
   const months = Array.from({ length: 6 }, (_, index) => {
     const date = new Date(latest.getFullYear(), latest.getMonth() - (5 - index), 1)
-    return { date, label: date.toLocaleDateString('en-US', { month: 'short' }), income: 0, expenses: 0 }
+    return { date, label: date.toLocaleDateString(locale, { month: 'short' }), income: 0, expenses: 0 }
   })
   for (const entry of entries) {
     const bucket = months.find((month) => month.date.getFullYear() === entry.parsedDate.getFullYear() && month.date.getMonth() === entry.parsedDate.getMonth())

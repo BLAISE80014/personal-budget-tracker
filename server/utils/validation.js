@@ -52,7 +52,7 @@ export const preferencesSchema = z.object({
     savingsAlerts: z.boolean(),
   }).strict().optional(),
   currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'RWF']).optional(),
-  language: z.enum(['English', 'French', 'Spanish']).optional(),
+  language: z.enum(['English', 'French', 'Spanish', 'Kinyarwanda']).optional(),
   dateFormat: z.enum(['MMM d, yyyy', 'MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy-MM-dd']).optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one preference is required.')

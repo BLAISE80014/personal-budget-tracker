@@ -30,7 +30,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { AUTH_STORAGE_KEY, initials, money, navItems, profileAvatarOptions, settingSections } from './app-data.js'
+import { AUTH_STORAGE_KEY, initials, localeForLanguage, money, navItems, profileAvatarOptions, readPreferences, settingSections } from './app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from './contexts.js'
 import { apiRequest, clearApiToken, getApiToken } from './api/client.js'
 import LoadingScreen from './components/LoadingScreen.jsx'
@@ -526,7 +526,7 @@ export function AdminLayout({ children }) {
             <kbd>Enter</kbd>
           </form>
           <div className="admin-topbar-actions">
-            <span className="admin-current-date">{new Intl.DateTimeFormat(undefined, { dateStyle: 'full' }).format(new Date())}</span>
+            <span className="admin-current-date">{new Intl.DateTimeFormat(localeForLanguage(readPreferences().language), { dateStyle: 'full' }).format(new Date())}</span>
             <Link className="admin-icon-button" to="/admin/dashboard/notifications" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}>
               <Bell size={18} />
               {unreadCount > 0 && <i>{unreadCount > 9 ? '9+' : unreadCount}</i>}

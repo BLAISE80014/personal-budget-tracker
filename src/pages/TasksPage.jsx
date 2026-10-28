@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, CheckCircle2, Circle, Clock3, Eye, ListTodo, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { AppLayout } from '../components.jsx'
+import { formatDate } from '../app-data.js'
 import { apiRequest } from '../api/client.js'
 import './TasksPage.css'
 
@@ -26,9 +27,7 @@ const today = () => {
   const date = new Date()
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
-const prettyDate = (value) => value
-  ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`))
-  : 'No date'
+const prettyDate = (value) => value ? formatDate(value) : 'No date'
 const isOverdue = (task, currentDate) => task.status !== 'Completed' && Boolean(task.dueDate) && task.dueDate < currentDate
 
 function TaskDialog({ task, mode, onClose, onSave }) {

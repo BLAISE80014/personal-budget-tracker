@@ -13,7 +13,7 @@ import {
   UserRound
 } from 'lucide-react'
 import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
-import { settingSections } from '../app-data.js'
+import { formatDate, PREFERENCES_STORAGE_KEY, settingSections } from '../app-data.js'
 import { useAppData, useNotifications, usePreferences, useTheme } from '../contexts.js'
 import { AppLayout, DataModal, NotificationList, PasswordChangeForm, ProfileAvatar, ToggleSetting } from '../components.jsx'
 import { apiRequest } from '../api/client.js'
@@ -50,6 +50,12 @@ export function SettingsPage() {
     notifications: { ...current.notifications, [key]: value },
   }))
 
+  const updateLanguage = (language) => {
+    const updatedPreferences = { ...preferences, language }
+    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(updatedPreferences))
+    setPreferences(updatedPreferences)
+  }
+
   const sectionTitles = {
     profile: ['Profile', 'Manage your personal information.'],
     account: ['Account', 'Review your account details and sign-in status.'],
@@ -85,7 +91,7 @@ export function SettingsPage() {
                 </div>
                 <div className="settings-detail-grid">
                   <div><small>Phone</small><strong>{data.user.phone || 'Not provided'}</strong></div>
-                  <div><small>Member since</small><strong>{data.user.memberSince}</strong></div>
+                  <div><small>Member since</small><strong>{formatDate(data.user.memberSince)}</strong></div>
                 </div>
                 <NavLink to="/profile" className="secondary-button">Change profile picture</NavLink>
                 <button type="button" className="primary-button" onClick={() => { setProfileForm({ fullName: data.user.fullName, email: data.user.email, phone: data.user.phone }); setEditing(true) }}>Edit Profile</button>
@@ -142,8 +148,8 @@ export function SettingsPage() {
             {section === 'preferences' && (
               <div className="settings-card settings-selects">
                 <label><span><Languages size={16} /> Language</span>
-                  <select value={preferences.language} onChange={(event) => setPreferences((current) => ({ ...current, language: event.target.value }))}>
-                    <option>English</option><option>French</option><option>Spanish</option>
+                  <select value={preferences.language} onChange={(event) => updateLanguage(event.target.value)}>
+                    <option>English</option><option>French</option><option>Spanish</option><option>Kinyarwanda</option>
                   </select>
                 </label>
                 <label><span><DollarSign size={16} /> Currency</span>
@@ -338,7 +344,7 @@ export function ProfilePage() {
 
           <div className="profile-meta">
             <div><span>Phone</span><strong>{user.phone}</strong></div>
-            <div><span>Member Since</span><strong>{user.memberSince}</strong></div>
+            <div><span>Member Since</span><strong>{formatDate(user.memberSince)}</strong></div>
           </div>
 
           <button type="button" className="primary-button" onClick={() => { setProfileForm({ fullName: user.fullName, email: user.email, phone: user.phone }); setEditing(true) }}>Edit Profile</button>
